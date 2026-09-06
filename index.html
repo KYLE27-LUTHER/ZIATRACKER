@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guest & Godparent Manager (Cloud Synced)</title>
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --secondary: #0b9f6e;
+      --warning: #d97706;
+      --danger: #ef4444;
+      --danger-light: #fee2e2;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --radius: 12px;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      padding: 1.5rem 1rem 4rem 1rem;
+      min-height: 100vh;
+    }
+
+    .container { max-width: 900px; margin: 0 auto; }
+
+    header {
+      background: var(--card-bg);
+      padding: 1.5rem;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .title-group h1 {
+      font-size: 1.5rem;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .title-group p {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    .sync-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #f1f5f9;
+      padding: 0.5rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+    }
+
+    .sync-status {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-weight: 600;
+      color: #166534;
+    }
+
+    .btn-sync-link {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.35rem 0.7rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+      background: var(--card-bg);
+      padding: 1.25rem;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      border-left: 4px solid var(--primary);
+    }
+
+    .stat-card.final { border-left-color: var(--primary); }
+    .stat-card.attending { border-left-color: var(--secondary); }
+    .stat-card.fee { border-left-color: var(--warning); }
+
+    .stat-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .stat-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-top: 0.25rem;
+    }
+
+    .stat-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem; }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 2fr 1.2fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    @media (max-width: 680px) { .form-grid { grid-template-columns: 1fr; } }
+
+    .form-group { display: flex; flex-direction: column; gap: 0.35rem; }
+    .form-group label { font-size: 0.85rem; font-weight: 600; }
+
+    input[type="text"], select {
+      width: 100%;
+      padding: 0.65rem 0.8rem;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      outline: none;
+    }
+
+    .number-input-group { display: flex; align-items: center; }
+
+    .btn-num {
+      width: 36px;
+      height: 38px;
+      background: #e2e8f0;
+      border: 1px solid var(--border-color);
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-num.minus { border-radius: 8px 0 0 8px; }
+    .btn-num.plus { border-radius: 0 8px 8px 0; }
+
+    .num-display {
+      width: 50px;
+      height: 38px;
+      text-align: center;
+      border-top: 1px solid var(--border-color);
+      border-bottom: 1px solid var(--border-color);
+      border-left: none;
+      border-right: none;
+      font-weight: 600;
+      padding: 0;
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .checkbox-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--primary); }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      width: 100%;
+    }
+
+    .btn-primary:hover { background: var(--primary-hover); }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+
+    .search-box { position: relative; flex: 1; min-width: 220px; }
+    .search-box i { position: absolute; left: 0.8rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+    .search-box input { padding-left: 2.3rem; }
+
+    .filter-tabs { display: flex; gap: 0.4rem; overflow-x: auto; padding-bottom: 0.25rem; }
+
+    .tab-btn {
+      padding: 0.45rem 0.85rem;
+      border-radius: 20px;
+      border: 1px solid var(--border-color);
+      background: white;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+    .table-container { overflow-x: auto; border: 1px solid var(--border-color); border-radius: var(--radius); }
+
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; }
+    th { background: #f1f5f9; padding: 0.75rem 1rem; font-weight: 600; color: var(--text-muted); border-bottom: 1px solid var(--border-color); }
+    td { padding: 0.85rem 1rem; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .badge-godparent { background: #e0e7ff; color: #3730a3; }
+    .badge-regular { background: #f3f4f6; color: #374151; }
+    .badge-plusone { background: #fef3c7; color: #92400e; }
+
+    .status-pill { cursor: pointer; }
+    .pill-yes { background: #dcfce7; color: #166534; }
+    .pill-no { background: #f1f5f9; color: #64748b; }
+    .pill-paid { background: #dbeafe; color: #1e40af; }
+    .pill-unpaid { background: #fee2e2; color: #991b1b; }
+    .pill-na { background: #f3f4f6; color: #9ca3af; cursor: default; }
+
+    .action-btns { display: flex; gap: 0.4rem; }
+
+    .btn-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+    }
+
+    .btn-icon.delete:hover { background: var(--danger-light); color: var(--danger); }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      padding: 1rem;
+    }
+
+    .modal-overlay.active { opacity: 1; pointer-events: auto; }
+
+    .modal {
+      background: white;
+      border-radius: var(--radius);
+      width: 100%;
+      max-width: 500px;
+      overflow: hidden;
+    }
+
+    .modal-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; }
+    .modal-body { padding: 1.5rem; display: flex; flex-direction: column; gap: 1.25rem; }
+    .modal-footer { padding: 1rem 1.5rem; background: #f8fafc; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 0.75rem; }
+
+    .btn-secondary { background: white; border: 1px solid var(--border-color); padding: 0.6rem 1.2rem; border-radius: 8px; cursor: pointer; }
+    
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #0f172a;
+      color: white;
+      padding: 0.75rem 1.25rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      display: none;
+      z-index: 2000;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <div class="title-group">
+        <h1><i class="fa-solid fa-cloud"></i> Internet Synced Guest Manager</h1>
+        <p>Real-time internet cloud storage — access and edit from any device.</p>
+      </div>
+      <div class="sync-bar">
+        <div class="sync-status">
+          <i class="fa-solid fa-signal" id="syncIcon"></i> <span id="syncText">Connected to Cloud</span>
+        </div>
+        <button class="btn-sync-link" onclick="copySyncLink()"><i class="fa-solid fa-link"></i> Sync Link</button>
+      </div>
+    </header>
+
+    <!-- Stats Bar -->
+    <div class="stats-grid">
+      <div class="stat-card final">
+        <span class="stat-label">Final Guest Headcount</span>
+        <span class="stat-value" id="statFinalHeadcount">0</span>
+        <span class="stat-sub" id="statFinalBreakdown">0 Godparents | 0 Guests</span>
+      </div>
+
+      <div class="stat-card attending">
+        <span class="stat-label">Attending Headcount</span>
+        <span class="stat-value" id="statAttendingHeadcount">0</span>
+        <span class="stat-sub" id="statAttendingBreakdown">0 Godparents | 0 Guests</span>
+      </div>
+
+      <div class="stat-card fee">
+        <span class="stat-label">Godparent Fees Paid</span>
+        <span class="stat-value" id="statFeesPaid">0 / 0</span>
+        <span class="stat-sub" id="statFeesPercentage">0% collected</span>
+      </div>
+    </div>
+
+    <!-- Form -->
+    <div class="card">
+      <form id="addGuestForm">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="guestName">Name</label>
+            <input type="text" id="guestName" placeholder="e.g. Maria Santos" required>
+          </div>
+
+          <div class="form-group">
+            <label for="guestCategory">Category</label>
+            <select id="guestCategory">
+              <option value="godparent">Godparent</option>
+              <option value="regular">Regular Guest</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Plus Ones Count</label>
+            <div class="number-input-group">
+              <button type="button" class="btn-num minus" onclick="adjustCount('plusOnes', -1)">-</button>
+              <input type="text" id="plusOnes" class="num-display" value="0" readonly>
+              <button type="button" class="btn-num plus" onclick="adjustCount('plusOnes', 1)">+</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="checkbox-group">
+          <label class="checkbox-item"><input type="checkbox" id="onFinalList"><span>Add to Final List</span></label>
+          <label class="checkbox-item"><input type="checkbox" id="isAttending"><span>Attending Event</span></label>
+          <label class="checkbox-item" id="feeCheckboxWrapper"><input type="checkbox" id="feePaid"><span>Godparent Fee Paid</span></label>
+        </div>
+
+        <button type="submit" class="btn-primary"><i class="fa-solid fa-cloud-arrow-up"></i> Add & Sync to Internet</button>
+      </form>
+    </div>
+
+    <!-- Table & Filters -->
+    <div class="card">
+      <div class="toolbar">
+        <div class="search-box">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="searchInput" placeholder="Search by name...">
+        </div>
+      </div>
+
+      <div class="filter-tabs">
+        <button class="tab-btn active" data-filter="all">All (<span id="countAll">0</span>)</button>
+        <button class="tab-btn" data-filter="godparent">Godparents (<span id="countGodparents">0</span>)</button>
+        <button class="tab-btn" data-filter="regular">Regular Guests (<span id="countRegular">0</span>)</button>
+        <button class="tab-btn" data-filter="final">Final List (<span id="countFinal">0</span>)</button>
+        <button class="tab-btn" data-filter="attending">Attending (<span id="countAttending">0</span>)</button>
+        <button class="tab-btn" data-filter="paid">Fee Paid (<span id="countPaid">0</span>)</button>
+        <button class="tab-btn" data-filter="unpaid">Fee Unpaid (<span id="countUnpaid">0</span>)</button>
+      </div>
+
+      <div class="table-container" style="margin-top: 1rem;">
+        <table>
+          <thead>
+            <tr>
+              <th>Name & Type</th>
+              <th>Plus Ones</th>
+              <th>Headcount</th>
+              <th>Final List</th>
+              <th>Attending</th>
+              <th>Fee Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="guestTableBody"></tbody>
+        </table>
+        <div id="emptyState" style="text-align: center; padding: 2rem; color: #64748b; display: none;">No matching guests found.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Edit Guest</h3>
+        <button class="btn-icon" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editGuestId">
+        <div class="form-group">
+          <label for="editGuestName">Name</label>
+          <input type="text" id="editGuestName" required>
+        </div>
+        <div class="form-group">
+          <label for="editGuestCategory">Category</label>
+          <select id="editGuestCategory" onchange="toggleModalFeeVisibility()">
+            <option value="godparent">Godparent</option>
+            <option value="regular">Regular Guest</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Plus Ones Count</label>
+          <div class="number-input-group">
+            <button type="button" class="btn-num minus" onclick="adjustCount('editPlusOnes', -1)">-</button>
+            <input type="text" id="editPlusOnes" class="num-display" value="0" readonly>
+            <button type="button" class="btn-num plus" onclick="adjustCount('editPlusOnes', 1)">+</button>
+          </div>
+        </div>
+        <div class="checkbox-group">
+          <label class="checkbox-item"><input type="checkbox" id="editOnFinalList"><span>Final List</span></label>
+          <label class="checkbox-item"><input type="checkbox" id="editIsAttending"><span>Attending</span></label>
+          <label class="checkbox-item" id="editFeeCheckboxWrapper"><input type="checkbox" id="editFeePaid"><span>Fee Paid</span></label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn-primary" style="width: auto;" onclick="saveGuestEdit()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- Firebase JavaScript SDK for Realtime Internet Storage -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    // Obtain or generate unique cloud sync key for internet sharing
+    const urlParams = new URLSearchParams(window.location.search);
+    let syncKey = urlParams.get('syncKey');
+
+    if (!syncKey) {
+      syncKey = localStorage.getItem('guest_sync_key') || 'list_' + Math.random().toString(36).substring(2, 9);
+      localStorage.setItem('guest_sync_key', syncKey);
+      
+      const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?syncKey=' + syncKey;
+      window.history.replaceState({ path: newUrl }, '', newUrl);
+    } else {
+      localStorage.setItem('guest_sync_key', syncKey);
+    }
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCkU6-x0hW8A14QfY1ajExo4rwiqLY7z6Q",
+  authDomain: "trackerzia.firebaseapp.com",
+  projectId: "trackerzia",
+  storageBucket: "trackerzia.firebasestorage.app",
+  messagingSenderId: "222207319535",
+  appId: "1:222207319535:web:a08ac6ec1fbed915f0ea1a",
+  measurementId: "G-NVX6SD6FW4"
+};    
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const guestCollection = collection(db, "guest_lists", syncKey, "items");
+
+    window.guests = [];
+    window.currentFilter = 'all';
+    window.searchQuery = '';
+
+    // Listen live to real-time internet database changes
+    onSnapshot(guestCollection, (snapshot) => {
+      window.guests = [];
+      snapshot.forEach(docSnap => {
+        window.guests.push({ id: docSnap.id, ...docSnap.data() });
+      });
+
+      document.getElementById('syncIcon').className = 'fa-solid fa-cloud-check';
+      document.getElementById('syncText').textContent = 'Synced to Internet';
+      renderApp();
+    }, (err) => {
+      console.warn("Cloud read fallback:", err);
+      window.guests = JSON.parse(localStorage.getItem('backup_guest_list_' + syncKey)) || [];
+      renderApp();
+    });
+
+    window.saveToInternet = async function(guestData) {
+      try {
+        localStorage.setItem('backup_guest_list_' + syncKey, JSON.stringify(window.guests));
+        await setDoc(doc(db, "guest_lists", syncKey, "items", guestData.id), guestData);
+      } catch (e) {
+        console.error("Save error:", e);
+      }
+    };
+
+    window.deleteFromInternet = async function(id) {
+      try {
+        await deleteDoc(doc(db, "guest_lists", syncKey, "items", id));
+      } catch (e) {
+        console.error("Delete error:", e);
+      }
+    };
+
+    window.copySyncLink = function() {
+      const shareUrl = window.location.href;
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        showToast("Sync link copied! Open this URL on your phone or tablet.");
+      }).catch(() => {
+        prompt("Copy this link to access your data on another device:", shareUrl);
+      });
+    };
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 3000);
+    }
+  </script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      setupEventListeners();
+    });
+
+    function setupEventListeners() {
+      document.getElementById('guestCategory').addEventListener('change', (e) => {
+        const feeWrapper = document.getElementById('feeCheckboxWrapper');
+        if (e.target.value === 'regular') {
+          feeWrapper.style.display = 'none';
+          document.getElementById('feePaid').checked = false;
+        } else {
+          feeWrapper.style.display = 'flex';
+        }
+      });
+
+      document.getElementById('addGuestForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = document.getElementById('guestName').value.trim();
+        const category = document.getElementById('guestCategory').value;
+        const plusOnes = parseInt(document.getElementById('plusOnes').value) || 0;
+        const onFinalList = document.getElementById('onFinalList').checked;
+        const isAttending = document.getElementById('isAttending').checked;
+        const feePaid = category === 'godparent' ? document.getElementById('feePaid').checked : false;
+
+        if (!name) return;
+
+        const newGuest = {
+          id: Date.now().toString(),
+          name,
+          category,
+          plusOnes,
+          onFinalList,
+          isAttending,
+          feePaid
+        };
+
+        window.saveToInternet(newGuest);
+
+        document.getElementById('guestName').value = '';
+        document.getElementById('plusOnes').value = '0';
+        document.getElementById('onFinalList').checked = false;
+        document.getElementById('isAttending').checked = false;
+        document.getElementById('feePaid').checked = false;
+      });
+
+      document.getElementById('searchInput').addEventListener('input', (e) => {
+        window.searchQuery = e.target.value.toLowerCase().trim();
+        renderTable();
+      });
+
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          window.currentFilter = btn.dataset.filter;
+          renderTable();
+        });
+      });
+    }
+
+    function adjustCount(inputId, delta) {
+      const input = document.getElementById(inputId);
+      let val = parseInt(input.value) || 0;
+      val += delta;
+      if (val < 0) val = 0;
+      input.value = val;
+    }
+
+    function toggleStatus(id, field) {
+      const guest = window.guests.find(g => g.id === id);
+      if (!guest) return;
+      if (field === 'feePaid' && guest.category !== 'godparent') return;
+
+      guest[field] = !guest[field];
+      window.saveToInternet(guest);
+    }
+
+    function deleteGuest(id) {
+      if (confirm('Delete this entry from the cloud?')) {
+        window.deleteFromInternet(id);
+      }
+    }
+
+    function openEditModal(id) {
+      const guest = window.guests.find(g => g.id === id);
+      if (!guest) return;
+
+      document.getElementById('editGuestId').value = guest.id;
+      document.getElementById('editGuestName').value = guest.name;
+      document.getElementById('editGuestCategory').value = guest.category;
+      document.getElementById('editPlusOnes').value = guest.plusOnes;
+      document.getElementById('editOnFinalList').checked = guest.onFinalList;
+      document.getElementById('editIsAttending').checked = guest.isAttending;
+      document.getElementById('editFeePaid').checked = guest.feePaid;
+
+      toggleModalFeeVisibility();
+      document.getElementById('editModal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('editModal').classList.remove('active');
+    }
+
+    function toggleModalFeeVisibility() {
+      const category = document.getElementById('editGuestCategory').value;
+      const feeWrapper = document.getElementById('editFeeCheckboxWrapper');
+      if (category === 'regular') {
+        feeWrapper.style.display = 'none';
+        document.getElementById('editFeePaid').checked = false;
+      } else {
+        feeWrapper.style.display = 'flex';
+      }
+    }
+
+    function saveGuestEdit() {
+      const id = document.getElementById('editGuestId').value;
+      const guest = window.guests.find(g => g.id === id);
+      if (!guest) return;
+
+      const name = document.getElementById('editGuestName').value.trim();
+      if (!name) return;
+
+      guest.name = name;
+      guest.category = document.getElementById('editGuestCategory').value;
+      guest.plusOnes = parseInt(document.getElementById('editPlusOnes').value) || 0;
+      guest.onFinalList = document.getElementById('editOnFinalList').checked;
+      guest.isAttending = document.getElementById('editIsAttending').checked;
+      guest.feePaid = guest.category === 'godparent' ? document.getElementById('editFeePaid').checked : false;
+
+      closeModal();
+      window.saveToInternet(guest);
+    }
+
+    function renderApp() {
+      renderStats();
+      renderTable();
+    }
+
+    function renderStats() {
+      const finalGuests = window.guests.filter(g => g.onFinalList);
+      const finalHeadcount = finalGuests.reduce((acc, g) => acc + 1 + g.plusOnes, 0);
+      const finalGodparents = finalGuests.filter(g => g.category === 'godparent').length;
+      const finalRegular = finalGuests.filter(g => g.category === 'regular').length;
+
+      document.getElementById('statFinalHeadcount').textContent = finalHeadcount;
+      document.getElementById('statFinalBreakdown').textContent = `${finalGodparents} Godparents | ${finalRegular} Guests`;
+
+      const attendingGuests = window.guests.filter(g => g.isAttending);
+      const attendingHeadcount = attendingGuests.reduce((acc, g) => acc + 1 + g.plusOnes, 0);
+      const attendingGodparents = attendingGuests.filter(g => g.category === 'godparent').length;
+      const attendingRegular = attendingGuests.filter(g => g.category === 'regular').length;
+
+      document.getElementById('statAttendingHeadcount').textContent = attendingHeadcount;
+      document.getElementById('statAttendingBreakdown').textContent = `${attendingGodparents} Godparents | ${attendingRegular} Guests`;
+
+      const allGodparents = window.guests.filter(g => g.category === 'godparent');
+      const paidGodparents = allGodparents.filter(g => g.feePaid).length;
+      const percentage = allGodparents.length > 0 ? Math.round((paidGodparents / allGodparents.length) * 100) : 0;
+
+      document.getElementById('statFeesPaid').textContent = `${paidGodparents} / ${allGodparents.length}`;
+      document.getElementById('statFeesPercentage').textContent = `${percentage}% collected`;
+
+      document.getElementById('countAll').textContent = window.guests.length;
+      document.getElementById('countGodparents').textContent = allGodparents.length;
+      document.getElementById('countRegular').textContent = window.guests.filter(g => g.category === 'regular').length;
+      document.getElementById('countFinal').textContent = finalGuests.length;
+      document.getElementById('countAttending').textContent = attendingGuests.length;
+      document.getElementById('countPaid').textContent = paidGodparents;
+      document.getElementById('countUnpaid').textContent = allGodparents.length - paidGodparents;
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('guestTableBody');
+      tbody.innerHTML = '';
+
+      let filtered = window.guests.filter(g => {
+        if (window.searchQuery && !g.name.toLowerCase().includes(window.searchQuery)) return false;
+        if (window.currentFilter === 'godparent') return g.category === 'godparent';
+        if (window.currentFilter === 'regular') return g.category === 'regular';
+        if (window.currentFilter === 'final') return g.onFinalList;
+        if (window.currentFilter === 'attending') return g.isAttending;
+        if (window.currentFilter === 'paid') return g.category === 'godparent' && g.feePaid;
+        if (window.currentFilter === 'unpaid') return g.category === 'godparent' && !g.feePaid;
+        return true;
+      });
+
+      const emptyState = document.getElementById('emptyState');
+      if (filtered.length === 0) {
+        emptyState.style.display = 'block';
+        return;
+      } else {
+        emptyState.style.display = 'none';
+      }
+
+      filtered.forEach(guest => {
+        const tr = document.createElement('tr');
+        const totalHeadcount = 1 + guest.plusOnes;
+
+        const catBadge = guest.category === 'godparent' 
+          ? '<span class="badge badge-godparent"><i class="fa-solid fa-crown"></i> Godparent</span>'
+          : '<span class="badge badge-regular"><i class="fa-solid fa-user"></i> Guest</span>';
+
+        const plusBadge = guest.plusOnes > 0
+          ? `<span class="badge badge-plusone">+${guest.plusOnes}</span>`
+          : '<span style="color: var(--text-muted);">—</span>';
+
+        let feePill = '<span class="badge pill-na">N/A</span>';
+        if (guest.category === 'godparent') {
+          feePill = guest.feePaid
+            ? `<span class="badge status-pill pill-paid" onclick="toggleStatus('${guest.id}', 'feePaid')"><i class="fa-solid fa-check"></i> Paid</span>`
+            : `<span class="badge status-pill pill-unpaid" onclick="toggleStatus('${guest.id}', 'feePaid')"><i class="fa-solid fa-xmark"></i> Unpaid</span>`;
+        }
+
+        const finalPill = guest.onFinalList
+          ? `<span class="badge status-pill pill-yes" onclick="toggleStatus('${guest.id}', 'onFinalList')"><i class="fa-solid fa-check"></i> Yes</span>`
+          : `<span class="badge status-pill pill-no" onclick="toggleStatus('${guest.id}', 'onFinalList')"><i class="fa-solid fa-minus"></i> No</span>`;
+
+        const attendingPill = guest.isAttending
+          ? `<span class="badge status-pill pill-yes" onclick="toggleStatus('${guest.id}', 'isAttending')"><i class="fa-solid fa-check"></i> Attending</span>`
+          : `<span class="badge status-pill pill-no" onclick="toggleStatus('${guest.id}', 'isAttending')"><i class="fa-solid fa-minus"></i> No</span>`;
+
+        tr.innerHTML = `
+          <td>
+            <div style="font-weight: 600;">${escapeHtml(guest.name)}</div>
+            <div style="margin-top: 0.2rem;">${catBadge}</div>
+          </td>
+          <td>${plusBadge}</td>
+          <td><strong>${totalHeadcount}</strong> <span style="font-size: 0.75rem; color: var(--text-muted);">person(s)</span></td>
+          <td>${finalPill}</td>
+          <td>${attendingPill}</td>
+          <td>${feePill}</td>
+          <td>
+            <div class="action-btns">
+              <button class="btn-icon" onclick="openEditModal('${guest.id}')"><i class="fa-solid fa-pen-to-square"></i></button>
+              <button class="btn-icon delete" onclick="deleteGuest('${guest.id}')"><i class="fa-solid fa-trash-can"></i></button>
+            </div>
+          </td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+  </script>
+</body>
+</html>
