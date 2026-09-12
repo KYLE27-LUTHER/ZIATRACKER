@@ -364,7 +364,7 @@
     <!-- Stats Bar -->
     <div class="stats-grid">
       <div class="stat-card final">
-        <span class="stat-label">Final Godparent Headcount</span>
+        <span class="stat-label">Final Guest Headcount</span>
         <span class="stat-value" id="statFinalHeadcount">0</span>
         <span class="stat-sub" id="statFinalBreakdown">0 Godparents | 0 Guests</span>
       </div>
@@ -520,15 +520,15 @@
       localStorage.setItem('guest_sync_key', syncKey);
     }
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCkU6-x0hW8A14QfY1ajExo4rwiqLY7z6Q",
-  authDomain: "trackerzia.firebaseapp.com",
-  projectId: "trackerzia",
-  storageBucket: "trackerzia.firebasestorage.app",
-  messagingSenderId: "222207319535",
-  appId: "1:222207319535:web:a08ac6ec1fbed915f0ea1a",
-  measurementId: "G-NVX6SD6FW4"
-};    
+    const firebaseConfig = {
+      apiKey: "AIzaSyCkU6-x0hW8A14QfY1ajExo4rwiqLY7z6Q",
+      authDomain: "trackerzia.firebaseapp.com",
+      projectId: "trackerzia",
+      storageBucket: "trackerzia.firebasestorage.app",
+      messagingSenderId: "222207319535",
+      appId: "1:222207319535:web:a08ac6ec1fbed915f0ea1a",
+      measurementId: "G-NVX6SD6FW4"
+    };    
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
@@ -730,16 +730,24 @@ const firebaseConfig = {
     function renderStats() {
       const finalGuests = window.guests.filter(g => g.onFinalList);
       const finalHeadcount = finalGuests.reduce((acc, g) => acc + 1 + g.plusOnes, 0);
+
+      // Count only primary godparent entries (ignoring plusOnes)
       const finalGodparents = finalGuests.filter(g => g.category === 'godparent').length;
-      const finalRegular = finalGuests.filter(g => g.category === 'regular').length;
+      // Include plusOnes in regular guests count
+      const finalRegular = finalGuests
+        .filter(g => g.category === 'regular')
+        .reduce((acc, g) => acc + 1 + g.plusOnes, 0);
 
       document.getElementById('statFinalHeadcount').textContent = finalHeadcount;
       document.getElementById('statFinalBreakdown').textContent = `${finalGodparents} Godparents | ${finalRegular} Guests`;
 
       const attendingGuests = window.guests.filter(g => g.isAttending);
       const attendingHeadcount = attendingGuests.reduce((acc, g) => acc + 1 + g.plusOnes, 0);
+
       const attendingGodparents = attendingGuests.filter(g => g.category === 'godparent').length;
-      const attendingRegular = attendingGuests.filter(g => g.category === 'regular').length;
+      const attendingRegular = attendingGuests
+        .filter(g => g.category === 'regular')
+        .reduce((acc, g) => acc + 1 + g.plusOnes, 0);
 
       document.getElementById('statAttendingHeadcount').textContent = attendingHeadcount;
       document.getElementById('statAttendingBreakdown').textContent = `${attendingGodparents} Godparents | ${attendingRegular} Guests`;
