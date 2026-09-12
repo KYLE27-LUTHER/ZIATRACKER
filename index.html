@@ -240,6 +240,27 @@
     .search-box i { position: absolute; left: 0.8rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
     .search-box input { padding-left: 2.3rem; }
 
+    .btn-sort {
+      background: white;
+      border: 1px solid var(--border-color);
+      padding: 0.65rem 1rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-main);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+    }
+
+    .btn-sort.active {
+      background: #e0e7ff;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
     .filter-tabs { display: flex; gap: 0.4rem; overflow-x: auto; padding-bottom: 0.25rem; }
 
     .tab-btn {
@@ -426,6 +447,9 @@
           <i class="fa-solid fa-magnifying-glass"></i>
           <input type="text" id="searchInput" placeholder="Search by name...">
         </div>
+        <button class="btn-sort" id="sortAlphabeticalBtn" onclick="toggleAlphabeticalSort()">
+          <i class="fa-solid fa-arrow-down-a-z"></i> Sort A-Z
+        </button>
       </div>
 
       <div class="filter-tabs">
@@ -537,6 +561,7 @@
     window.guests = [];
     window.currentFilter = 'all';
     window.searchQuery = '';
+    window.isAlphabetical = false;
 
     // Listen live to real-time internet database changes
     onSnapshot(guestCollection, (snapshot) => {
@@ -649,6 +674,17 @@
       });
     }
 
+    function toggleAlphabeticalSort() {
+      window.isAlphabetical = !window.isAlphabetical;
+      const btn = document.getElementById('sortAlphabeticalBtn');
+      if (window.isAlphabetical) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+      renderTable();
+    }
+
     function adjustCount(inputId, delta) {
       const input = document.getElementById(inputId);
       let val = parseInt(input.value) || 0;
@@ -729,7 +765,11 @@
 
     function renderStats() {
       const finalGuests = window.guests.filter(g => g.onFinalList);
-      const finalHeadcount = finalGuests.reduce((acc, g) => acc + 1 + g.plusOnes, 0);
+      
+      // Calculate final headcount: Godparents count as 1 (excluding plusOnes), Regular guests count as 1 + plusOnes
+      const finalHeadcount = finalGuests.reduce((acc, g) => {
+        return g.category === 'godparent' ? acc + 1 : acc + 1 + g.plusOnes;
+      }, 0);
 
       // Count only primary godparent entries (ignoring plusOnes)
       const finalGodparents = finalGuests.filter(g => g.category === 'godparent').length;
@@ -782,6 +822,10 @@
         if (window.currentFilter === 'unpaid') return g.category === 'godparent' && !g.feePaid;
         return true;
       });
+
+      if (window.isAlphabetical) {
+        filtered.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+      }
 
       const emptyState = document.getElementById('emptyState');
       if (filtered.length === 0) {
