@@ -301,7 +301,7 @@
       pointer-events: none;
     }
 
-    /* Draggable Elements Styling */
+    /* Draggable & Resizable Elements Styling */
     .draggable {
       position: absolute;
       cursor: move;
@@ -312,13 +312,22 @@
       border-radius: 4px;
       transition: border-color 0.2s;
       box-sizing: border-box;
-      min-width: 30px;
-      min-height: 24px;
+      min-width: 35px;
+      min-height: 25px;
+      z-index: 5; /* Default Layer */
     }
 
     .draggable.selected-for-resize {
       border-color: var(--primary);
-      box-shadow: 0 0 0 1px rgba(79,70,229,.15);
+      box-shadow: 0 0 0 1px rgba(79,70,229,.25);
+    }
+
+    /* Word-Style Text Wrapping Z-Index Classes */
+    .draggable.wrap-behind {
+      z-index: 1 !important;
+    }
+    .draggable.wrap-infront {
+      z-index: 10 !important;
     }
 
     .resize-handle {
@@ -344,30 +353,33 @@
     }
 
     .draggable img {
-      max-width: 140px;
-      height: auto;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
       border-radius: 6px;
       pointer-events: none;
+      display: block;
     }
 
     /* Element Control Buttons */
     .draggable-controls {
       display: none;
       position: absolute;
-      top: -10px;
+      top: -12px;
       right: -10px;
       gap: 4px;
-      z-index: 10;
+      z-index: 40;
     }
 
     .draggable:hover .draggable-controls,
-    .draggable.active .draggable-controls {
+    .draggable.active .draggable-controls,
+    .draggable.selected-for-resize .draggable-controls {
       display: flex;
     }
 
     .control-btn {
-      width: 20px;
-      height: 20px;
+      width: 22px;
+      height: 22px;
       border-radius: 50%;
       border: none;
       color: white;
@@ -376,6 +388,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
 
     .btn-delete { background: var(--danger); }
@@ -418,7 +431,6 @@
       margin-top: 0.1rem;
     }
 
-    /* Dynamic, High-Readability Grid for Final Godparents */
     .godparents-list-preview {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -438,7 +450,6 @@
       align-items: center;
       justify-content: flex-start;
       padding: 0.15rem 0.35rem;
-      background: rgba(255, 255, 255, 0.6);
       border-radius: 4px;
       font-size: 0.75rem;
       font-weight: 600;
@@ -449,8 +460,6 @@
       white-space: normal;
       color: var(--card-text-color);
       box-sizing: border-box;
-
-      /* Multi-column masonry layout fallback */
       break-inside: avoid;
     }
 
@@ -740,7 +749,7 @@
       background: #f8fafc; border: 1px solid var(--border-color); padding: .85rem; border-radius: 8px;
     }
     .element-editor-title { font-size:.85rem; font-weight:700; color:var(--primary); margin-bottom:.45rem; }
-    .element-editor .tool-row { display:grid; grid-template-columns:repeat(4,1fr); gap:.35rem; }
+    .element-editor .tool-row { display:grid; grid-template-columns:repeat(4,1fr); gap:.35rem; margin-bottom: 0.5rem; }
     .element-editor button { padding:.4rem .3rem; border:1px solid var(--border-color); background:white; border-radius:6px; cursor:pointer; font-size:.72rem; font-weight:600; }
     .element-editor button:hover { background:#eef2ff; }
   </style>
@@ -792,7 +801,7 @@
       <h2 style="font-size: 1.2rem; color: var(--primary); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
         <i class="fa-solid fa-paint-brush"></i> Double-Sided Invitation Card Studio
       </h2>
-      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Design back-to-back invitations, adjust pastels, drag elements freely with alignment guidelines, upload custom photos, and add textboxes.</p>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Design back-to-back invitations, drag photos/text freely, resize elements by dragging corners, and set MS Word-style Wrap Text layering (In Front / Behind Text).</p>
 
       <!-- Page Switcher Bar -->
       <div class="page-nav-bar">
@@ -825,6 +834,38 @@
               <button type="button" onclick="addFreelyDraggableText()"><i class="fa-solid fa-font"></i> + Add Textbox</button>
               <label for="customPhotoLoader"><i class="fa-solid fa-image"></i> + Add Photo</label>
               <input type="file" id="customPhotoLoader" accept="image/*" style="display: none;" onchange="handleDraggablePhotoUpload(event)">
+            </div>
+          </div>
+
+          <!-- ELEMENT WRAP TEXT & ALIGNMENT PANEL -->
+          <div class="element-editor" id="elementEditorPanel">
+            <div class="element-editor-title"><i class="fa-solid fa-layer-group"></i> MS Word-Style Text Wrapping & Layering</div>
+            <div style="font-size:.75rem;color:var(--text-muted);margin-bottom:.5rem;">Select any photo or text box to send behind or bring in front of other elements. Drag corners to resize freely.</div>
+            
+            <!-- Wrap Text Options -->
+            <div class="tool-row" style="grid-template-columns: repeat(2, 1fr); gap: 0.4rem;">
+              <button type="button" onclick="setWrapText('behind')" style="background: #e0e7ff; color: var(--primary); border-color: #c7d2fe;">
+                <i class="fa-solid fa-layer-group"></i> Behind Text
+              </button>
+              <button type="button" onclick="setWrapText('infront')" style="background: #e0e7ff; color: var(--primary); border-color: #c7d2fe;">
+                <i class="fa-solid fa-clone"></i> In Front of Text
+              </button>
+            </div>
+            <div class="tool-row" style="grid-template-columns: repeat(2, 1fr); gap: 0.4rem; margin-bottom: 0.75rem;">
+              <button type="button" onclick="changeLayer('forward')"><i class="fa-solid fa-arrow-up"></i> Bring Forward</button>
+              <button type="button" onclick="changeLayer('backward')"><i class="fa-solid fa-arrow-down"></i> Send Backward</button>
+            </div>
+
+            <div class="element-editor-title" style="margin-top: 0.5rem;"><i class="fa-solid fa-expand"></i> Alignment Tools</div>
+            <div class="tool-row">
+              <button type="button" onclick="alignSelectedElement('left')">Left</button>
+              <button type="button" onclick="alignSelectedElement('centerX')">Center H</button>
+              <button type="button" onclick="alignSelectedElement('right')">Right</button>
+              <button type="button" onclick="alignSelectedElement('top')">Top</button>
+              <button type="button" onclick="alignSelectedElement('centerY')">Center V</button>
+              <button type="button" onclick="alignSelectedElement('bottom')">Bottom</button>
+              <button type="button" onclick="alignSelectedElement('center')">Center</button>
+              <button type="button" onclick="autoAlignAllElements()">Auto Align</button>
             </div>
           </div>
 
@@ -866,21 +907,6 @@
               <button type="button" class="preset-btn" style="padding: 0.3rem 0.5rem; flex: 1;" onclick="setCustomCm(10.2, 15.2)">4x6 in (10.2×15.2cm)</button>
               <button type="button" class="preset-btn" style="padding: 0.3rem 0.5rem; flex: 1;" onclick="setCustomCm(10, 10)">Square (10×10cm)</button>
               <button type="button" class="preset-btn" style="padding: 0.3rem 0.5rem; flex: 1;" onclick="setCustomCm(14.8, 21.0)">A5 (14.8×21cm)</button>
-            </div>
-          </div>
-
-          <div class="element-editor" id="elementEditorPanel">
-            <div class="element-editor-title"><i class="fa-solid fa-expand"></i> Resize & Align Selected Content</div>
-            <div style="font-size:.75rem;color:var(--text-muted);margin-bottom:.5rem;">Select any content on the card, then drag any corner to resize it freely. No manual size input required.</div>
-            <div class="tool-row">
-              <button type="button" onclick="alignSelectedElement('left')">Left</button>
-              <button type="button" onclick="alignSelectedElement('centerX')">Center H</button>
-              <button type="button" onclick="alignSelectedElement('right')">Right</button>
-              <button type="button" onclick="alignSelectedElement('top')">Top</button>
-              <button type="button" onclick="alignSelectedElement('centerY')">Center V</button>
-              <button type="button" onclick="alignSelectedElement('bottom')">Bottom</button>
-              <button type="button" onclick="alignSelectedElement('center')">Center</button>
-              <button type="button" onclick="autoAlignAllElements()">Auto Align All</button>
             </div>
           </div>
 
@@ -1041,6 +1067,9 @@
 
           <!-- ACTION BUTTONS TOOLBAR -->
           <div style="margin-top: 1.25rem; display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center;">
+            <button class="btn-primary" style="width: auto; background: #10b981;" onclick="manualSaveStudioProject()">
+              <i class="fa-solid fa-floppy-disk"></i> Save Project
+            </button>
             <button class="btn-primary" style="width: auto; background: #0284c7;" onclick="downloadCardImage('png')">
               <i class="fa-solid fa-file-image"></i> Download PNG
             </button>
@@ -1253,6 +1282,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const guestCollection = collection(db, "guest_lists", syncKey, "items");
+    const cardDocRef = doc(db, "guest_lists", syncKey, "settings", "invitation_card");
 
     window.guests = [];
     window.currentFilter = 'all';
@@ -1263,6 +1293,8 @@
     window.isDoubleSided = true;
     window.frontBgImage = '';
     window.backBgImage = '';
+
+    window.activeTheme = 'blush';
 
     onSnapshot(guestCollection, (snapshot) => {
       window.guests = [];
@@ -1278,6 +1310,94 @@
       window.guests = JSON.parse(localStorage.getItem('backup_guest_list_' + syncKey)) || [];
       renderApp();
     });
+
+    // Real-Time Listener for Invitation Card Settings
+    onSnapshot(cardDocRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        applyLoadedCardSettings(data);
+      }
+    });
+
+    window.autoSaveCardSettings = async function() {
+      const settingsData = {
+        cardWidthCm: parseFloat(document.getElementById('cardWidthCm').value) || 12.7,
+        cardHeightCm: parseFloat(document.getElementById('cardHeightCm').value) || 17.8,
+        orientation: document.getElementById('cardOrientation').value,
+        fontStyle: document.getElementById('fontSelect').value,
+        overlayOpacity: document.getElementById('cardOverlayOpacity').value,
+        theme: window.activeTheme || 'blush',
+        isDoubleSided: window.isDoubleSided,
+        title: document.getElementById('cardTitleInput').value,
+        childName: document.getElementById('cardChildInput').value,
+        verse: document.getElementById('cardVerseInput').value,
+        details: document.getElementById('cardDetailsInput').value,
+        godparentHeading: document.getElementById('cardGodparentHeadingInput').value,
+        godparentSubheading: document.getElementById('cardGodparentSubheadingInput').value,
+        frontBgImage: window.frontBgImage || '',
+        backBgImage: window.backBgImage || ''
+      };
+
+      try {
+        localStorage.setItem('backup_card_settings_' + syncKey, JSON.stringify(settingsData));
+        await setDoc(cardDocRef, settingsData, { merge: true });
+      } catch (e) {
+        console.error("Card settings auto-save error:", e);
+      }
+    };
+
+    window.manualSaveStudioProject = async function() {
+      await window.autoSaveCardSettings();
+      if (window.showToast) {
+        window.showToast("Invitation design project saved successfully!");
+      } else {
+        alert("Invitation design project saved successfully!");
+      }
+    };
+
+    function applyLoadedCardSettings(data) {
+      if (!data) return;
+      if (data.cardWidthCm) document.getElementById('cardWidthCm').value = data.cardWidthCm;
+      if (data.cardHeightCm) document.getElementById('cardHeightCm').value = data.cardHeightCm;
+      if (data.orientation) document.getElementById('cardOrientation').value = data.orientation;
+      if (data.fontStyle) {
+        document.getElementById('fontSelect').value = data.fontStyle;
+        updateCardTypography();
+      }
+      if (data.overlayOpacity) {
+        document.getElementById('cardOverlayOpacity').value = data.overlayOpacity;
+        updateOverlayOpacity(data.overlayOpacity);
+      }
+      if (data.theme) {
+        window.activeTheme = data.theme;
+        applyPalette(data.theme, false);
+      }
+      if (typeof data.isDoubleSided === 'boolean') {
+        window.isDoubleSided = data.isDoubleSided;
+        document.getElementById('enableDoubleSidedToggle').checked = data.isDoubleSided;
+      }
+
+      if (data.title !== undefined) document.getElementById('cardTitleInput').value = data.title;
+      if (data.childName !== undefined) document.getElementById('cardChildInput').value = data.childName;
+      if (data.verse !== undefined) document.getElementById('cardVerseInput').value = data.verse;
+      if (data.details !== undefined) document.getElementById('cardDetailsInput').value = data.details;
+
+      if (data.godparentHeading !== undefined) document.getElementById('cardGodparentHeadingInput').value = data.godparentHeading;
+      if (data.godparentSubheading !== undefined) document.getElementById('cardGodparentSubheadingInput').value = data.godparentSubheading;
+
+      if (data.frontBgImage !== undefined) window.frontBgImage = data.frontBgImage;
+      if (data.backBgImage !== undefined) window.backBgImage = data.backBgImage;
+
+      const cardPreview = document.getElementById('invitationCardPreview');
+      if (window.activeCardPage === 'front') {
+        cardPreview.style.backgroundImage = window.frontBgImage ? `url('${window.frontBgImage}')` : 'none';
+      } else {
+        cardPreview.style.backgroundImage = window.backBgImage ? `url('${window.backBgImage}')` : 'none';
+      }
+
+      updateCardText(false);
+      updateCardDimensions(false);
+    }
 
     window.saveToInternet = async function(guestData) {
       try {
@@ -1321,13 +1441,13 @@
     document.addEventListener('DOMContentLoaded', () => {
       setupEventListeners();
       renderGodparentsOnCard();
-      updateCardDimensions();
+      updateCardDimensions(false);
       setupDraggableHandlers();
       initializeResizeHandles();
       selectElementForEditing(document.querySelector('.draggable'));
     });
 
-    /* Universal Free Drag & Drop Event Listeners with Alignment Guidelines & Magnetic Snap */
+    /* Universal Free Drag & Drop Event Listeners with Alignment Guidelines & Corner Resizing */
     function setupDraggableHandlers() {
       document.addEventListener('mousedown', dragStart);
       document.addEventListener('mouseup', dragEnd);
@@ -1367,6 +1487,35 @@
       window.selectedResizeElement = el;
     }
 
+    /* Wrap Text / MS Word Layering Controls */
+    function setWrapText(type) {
+      const el = window.selectedResizeElement;
+      if (!el) {
+        alert("Please select a photo or text box first.");
+        return;
+      }
+      el.classList.remove('wrap-behind', 'wrap-infront');
+      if (type === 'behind') {
+        el.classList.add('wrap-behind');
+        showToast("Element wrapped: Behind Text");
+      } else if (type === 'infront') {
+        el.classList.add('wrap-infront');
+        showToast("Element wrapped: In Front of Text");
+      }
+    }
+
+    function changeLayer(direction) {
+      const el = window.selectedResizeElement;
+      if (!el) return;
+      let currentZ = parseInt(window.getComputedStyle(el).zIndex) || 5;
+      if (direction === 'forward') {
+        el.style.zIndex = currentZ + 1;
+      } else if (direction === 'backward') {
+        el.style.zIndex = Math.max(1, currentZ - 1);
+      }
+    }
+
+    /* Corner Drag Resizing Engine */
     function resizeStart(e) {
       const handle = e.target.closest('.resize-handle');
       if (!handle) return;
@@ -1393,20 +1542,24 @@
       const r = resizeState;
       let w = r.startW, h = r.startH, left = r.startLeft, top = r.startTop;
       const dx = point.clientX - r.startX, dy = point.clientY - r.startY;
+      
       if (r.handle.includes('e')) w = r.startW + dx;
       if (r.handle.includes('s')) h = r.startH + dy;
       if (r.handle.includes('w')) { w = r.startW - dx; left = r.startLeft + dx; }
       if (r.handle.includes('n')) { h = r.startH - dy; top = r.startTop + dy; }
+      
       const parent = r.wrapper.offsetParent;
       w = Math.max(35, Math.min(w, parent.clientWidth));
       h = Math.max(25, Math.min(h, parent.clientHeight));
       left = Math.max(0, Math.min(left, parent.clientWidth - w));
       top = Math.max(0, Math.min(top, parent.clientHeight - h));
+      
       r.wrapper.style.width = `${w}px`;
       r.wrapper.style.height = `${h}px`;
       r.wrapper.style.left = `${left}px`;
       r.wrapper.style.top = `${top}px`;
       r.wrapper.style.bottom = 'auto';
+
       if (r.wrapper.querySelector('#previewGodparentsList') || r.wrapper.querySelector('.card-godparents-box')) renderGodparentsOnCard();
     }
 
@@ -1536,11 +1689,15 @@
       const wrapper = createDraggableWrapper();
       wrapper.style.top = '100px';
       wrapper.style.left = '20px';
+      wrapper.style.width = '180px';
+      wrapper.style.height = '40px';
 
       const p = document.createElement('div');
       p.contentEditable = "true";
       p.style.fontSize = "0.9rem";
       p.style.fontWeight = "600";
+      p.style.width = "100%";
+      p.style.height = "100%";
       p.innerText = "Click to edit text";
 
       wrapper.appendChild(p);
@@ -1557,8 +1714,10 @@
       reader.onload = function(event) {
         const parent = window.activeCardPage === 'front' ? document.getElementById('frontCardContent') : document.getElementById('backCardContent');
         const wrapper = createDraggableWrapper();
-        wrapper.style.top = '80px';
-        wrapper.style.left = '20px';
+        wrapper.style.top = '60px';
+        wrapper.style.left = '30px';
+        wrapper.style.width = '140px';
+        wrapper.style.height = '140px';
 
         const img = document.createElement('img');
         img.src = event.target.result;
@@ -1612,7 +1771,9 @@
       }
 
       const editControls = cardElement.querySelectorAll('.draggable-controls');
+      const handles = cardElement.querySelectorAll('.resize-handle');
       editControls.forEach(ctrl => ctrl.style.visibility = 'hidden');
+      handles.forEach(h => h.style.visibility = 'hidden');
 
       html2canvas(cardElement, {
         scale: 3,
@@ -1621,6 +1782,7 @@
         backgroundColor: null
       }).then(canvas => {
         editControls.forEach(ctrl => ctrl.style.visibility = '');
+        handles.forEach(h => h.style.visibility = '');
 
         const pageLabel = window.activeCardPage === 'front' ? 'Front' : 'Back';
         const fileName = `Invitation_${pageLabel}_Page.${format}`;
@@ -1635,6 +1797,7 @@
         }
       }).catch(err => {
         editControls.forEach(ctrl => ctrl.style.visibility = '');
+        handles.forEach(h => h.style.visibility = '');
         console.error("Image generation error:", err);
         alert("Failed to capture image. Please try again.");
       });
@@ -1734,7 +1897,7 @@
       updateCardDimensions();
     }
 
-    function updateCardDimensions() {
+    function updateCardDimensions(shouldSave = true) {
       const widthCm = parseFloat(document.getElementById('cardWidthCm').value) || 12.7;
       const heightCm = parseFloat(document.getElementById('cardHeightCm').value) || 17.8;
       
@@ -1765,8 +1928,11 @@
       document.getElementById('liveDimensionLabel').textContent = dimLabel;
       document.getElementById('modalDimensionDisplay').textContent = `${widthCm} cm × ${heightCm} cm (${currentOrient})`;
 
-      // Re-trigger layout fit for godparents on dimension resize
       renderGodparentsOnCard();
+
+      if (shouldSave && window.autoSaveCardSettings) {
+        window.autoSaveCardSettings();
+      }
     }
 
     function setCustomCm(w, h) {
@@ -1822,9 +1988,11 @@
 
     function toggleDoubleSidedMode(enabled) {
       window.isDoubleSided = enabled;
+      if (window.autoSaveCardSettings) window.autoSaveCardSettings();
     }
 
-    function applyPalette(theme) {
+    function applyPalette(theme, shouldSave = true) {
+      window.activeTheme = theme;
       const root = document.documentElement;
       if (theme === 'blush') {
         root.style.setProperty('--card-bg-color', '#fdf2f8');
@@ -1847,11 +2015,16 @@
         root.style.setProperty('--card-accent-color', '#c084fc');
         root.style.setProperty('--card-border-color', '#86efac');
       }
+
+      if (shouldSave && window.autoSaveCardSettings) {
+        window.autoSaveCardSettings();
+      }
     }
 
     function updateCardTypography() {
       const font = document.getElementById('fontSelect').value;
       document.documentElement.style.setProperty('--card-font-family', font);
+      if (window.autoSaveCardSettings) window.autoSaveCardSettings();
     }
 
     function handleImageUpload(event) {
@@ -1865,6 +2038,7 @@
             window.backBgImage = e.target.result;
           }
           document.getElementById('invitationCardPreview').style.backgroundImage = `url('${e.target.result}')`;
+          if (window.autoSaveCardSettings) window.autoSaveCardSettings();
         };
         reader.readAsDataURL(file);
       }
@@ -1872,9 +2046,10 @@
 
     function updateOverlayOpacity(val) {
       document.getElementById('cardOverlay').style.backgroundColor = `rgba(255, 255, 255, ${val})`;
+      if (window.autoSaveCardSettings) window.autoSaveCardSettings();
     }
 
-    function updateCardText() {
+    function updateCardText(shouldSave = true) {
       document.getElementById('previewTitle').textContent = document.getElementById('cardTitleInput').value;
       document.getElementById('previewVerse').textContent = document.getElementById('cardVerseInput').value;
       document.getElementById('previewChild').textContent = document.getElementById('cardChildInput').value;
@@ -1882,15 +2057,17 @@
 
       document.getElementById('previewGodparentHeading').textContent = document.getElementById('cardGodparentHeadingInput').value;
       document.getElementById('previewGodparentSubheading').textContent = document.getElementById('cardGodparentSubheadingInput').value;
+
+      if (shouldSave && window.autoSaveCardSettings) {
+        window.autoSaveCardSettings();
+      }
     }
 
-    /* DEDICATED PAGE 2: Renders only the Final Godparents list cleanly and readably */
     function renderGodparentsOnCard() {
       const container = document.getElementById('previewGodparentsList');
       if (!container) return;
       container.innerHTML = '';
 
-      // Filter exclusively for Final Godparents
       const finalGodparents = (window.guests || [])
         .filter(g => g.category === 'godparent' && g.onFinalList);
 
@@ -1904,7 +2081,6 @@
 
       container.style.display = 'grid';
 
-      // Dynamic Grid Columns Configuration based on count
       const count = finalGodparents.length;
       let columns = 2;
       if (count > 16 && count <= 36) {
@@ -1922,7 +2098,6 @@
         container.appendChild(item);
       });
 
-      // Auto-scaling font algorithm to guarantee readable fit without overflow
       const tags = [...container.querySelectorAll('.godparent-tag')];
       let fontSize = count <= 10 ? 11 : count <= 20 ? 9.5 : count <= 35 ? 8.2 : 7;
 
@@ -1935,7 +2110,6 @@
 
       applyFontSize(fontSize);
 
-      // Fine-tune fit step-by-step if bounding box overflows
       let attempts = 0;
       while (container.scrollHeight > container.clientHeight && fontSize > 4.5 && attempts < 50) {
         fontSize -= 0.2;
@@ -2124,38 +2298,32 @@
 
         const finalPill = guest.onFinalList
           ? `<span class="badge status-pill pill-yes" onclick="toggleStatus('${guest.id}', 'onFinalList')"><i class="fa-solid fa-check"></i> Yes</span>`
-          : `<span class="badge status-pill pill-no" onclick="toggleStatus('${guest.id}', 'onFinalList')"><i class="fa-solid fa-minus"></i> No</span>`;
+          : `<span class="badge status-pill pill-no" onclick="toggleStatus('${guest.id}', 'onFinalList')"><i class="fa-solid fa-xmark"></i> No</span>`;
 
         const attendingPill = guest.isAttending
-          ? `<span class="badge status-pill pill-yes" onclick="toggleStatus('${guest.id}', 'isAttending')"><i class="fa-solid fa-check"></i> Attending</span>`
-          : `<span class="badge status-pill pill-no" onclick="toggleStatus('${guest.id}', 'isAttending')"><i class="fa-solid fa-minus"></i> No</span>`;
+          ? `<span class="badge status-pill pill-yes" onclick="toggleStatus('${guest.id}', 'isAttending')"><i class="fa-solid fa-check"></i> Yes</span>`
+          : `<span class="badge status-pill pill-no" onclick="toggleStatus('${guest.id}', 'isAttending')"><i class="fa-solid fa-xmark"></i> No</span>`;
 
         tr.innerHTML = `
           <td>
-            <div style="font-weight: 600;">${escapeHtml(guest.name)}</div>
+            <div style="font-weight: 600;">${guest.name}</div>
             <div style="margin-top: 0.2rem;">${catBadge}</div>
           </td>
           <td>${plusBadge}</td>
-          <td><strong>${totalHeadcount}</strong> <span style="font-size: 0.75rem; color: var(--text-muted);">person(s)</span></td>
+          <td><strong>${totalHeadcount}</strong></td>
           <td>${finalPill}</td>
           <td>${attendingPill}</td>
           <td>${feePill}</td>
           <td>
             <div class="action-btns">
-              <button class="btn-icon" onclick="openEditModal('${guest.id}')"><i class="fa-solid fa-pen-to-square"></i></button>
-              <button class="btn-icon delete" onclick="deleteGuest('${guest.id}')"><i class="fa-solid fa-trash-can"></i></button>
+              <button class="btn-icon" onclick="openEditModal('${guest.id}')" title="Edit"><i class="fa-solid fa-pen"></i></button>
+              <button class="btn-icon delete" onclick="deleteGuest('${guest.id}')" title="Delete"><i class="fa-solid fa-trash"></i></button>
             </div>
           </td>
         `;
 
         tbody.appendChild(tr);
       });
-    }
-
-    function escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
     }
   </script>
 </body>
