@@ -1,87 +1,71 @@
-require('dotenv').config();
 const express = require('express');
-const path = require('path');
 const { Pool } = require('pg');
+const path = require('path');
 
 const app = express();
-app.use(express.json({ limit: '5mb' }));
-app.use(express.static(__dirname));
+app.use(express.json());
 
+// Serve static files (index.html)
+app.use(express.static(path.join(__dirname, '.')));
+
+// Database connection using DATABASE_URL env var on Render
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
-  max: 10,
-  idleTimeoutMillis: 30000
+  ssl: { rejectUnauthorized: false }
 });
 
-function requireSyncKey(req, res, next) {
-  const key = String(req.query.syncKey || '').trim();
-  if (!key || key.length > 200) return res.status(400).json({ error: 'syncKey is required' });
-  req.syncKey = key;
-  next();
-}
+// Setup CockroachDB Tables
+pool.query(`
+  CREATE TABLE IF NOT EXISTS guests (
+    id STRING PRIMARY KEY,
+    sync_key STRING,
+    data JSONB
+  );
+  CREATE TABLE IF NOT EXISTS settings (
+    sync_key STRING PRIMARY KEY,
+    data JSONB
+  );
+`).catch(console.error);
 
-app.get('/api/health', async (req, res) => {
-  try { await pool.query('SELECT 1'); res.json({ ok: true, database: 'CockroachDB' }); }
-  catch (e) { res.status(503).json({ ok: false, error: 'Database unavailable' }); }
+// API Endpoints
+app.get('/api/guests', async (req, res) => {
+  const { syncKey } = req.query;
+  const result = await pool.query('SELECT data FROM guests WHERE sync_key = $1', [syncKey]);
+  res.json(result.rows.map(r => r.data));
 });
 
-app.get('/api/guests', requireSyncKey, async (req, res) => {
-  try {
-    const { rows } = await pool.query(`
-      SELECT id, name, category, plus_ones AS "plusOnes",
-             on_final_list AS "onFinalList", is_attending AS "isAttending",
-             fee_paid AS "feePaid", data
-      FROM guests WHERE sync_key = $1 ORDER BY updated_at, id`, [req.syncKey]);
-    res.json(rows.map(r => ({ ...r.data, id: r.id, name: r.name, category: r.category,
-      plusOnes: r.plusOnes, onFinalList: r.onFinalList, isAttending: r.isAttending, feePaid: r.feePaid })));
-  } catch (e) { console.error(e); res.status(500).json({ error: 'Failed to load guests' }); }
+app.put('/api/guests/:id', async (req, res) => {
+  const { syncKey } = req.query;
+  const { id } = req.params;
+  const data = req.body;
+  await pool.query(
+    'INSERT INTO guests (id, sync_key, data) VALUES ($1, $2, $3) ON CONFLICT (id) DO UPDATE SET data = $3',
+    [id, syncKey, JSON.stringify(data)]
+  );
+  res.json({ ok: true });
 });
 
-app.put('/api/guests/:id', requireSyncKey, async (req, res) => {
-  const g = req.body || {};
-  const id = String(req.params.id).trim();
-  if (!id) return res.status(400).json({ error: 'Invalid id' });
-  try {
-    await pool.query(`
-      INSERT INTO guests (sync_key, id, name, category, plus_ones, on_final_list, is_attending, fee_paid, data, updated_at)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,now())
-      ON CONFLICT (sync_key,id) DO UPDATE SET
-        name=excluded.name, category=excluded.category, plus_ones=excluded.plus_ones,
-        on_final_list=excluded.on_final_list, is_attending=excluded.is_attending,
-        fee_paid=excluded.fee_paid, data=excluded.data, updated_at=now()`,
-      [req.syncKey, id, String(g.name || ''), String(g.category || 'regular'),
-       Number(g.plusOnes || 0), Boolean(g.onFinalList), Boolean(g.isAttending), Boolean(g.feePaid), JSON.stringify(g)]);
-    res.json({ ok: true });
-  } catch (e) { console.error(e); res.status(500).json({ error: 'Failed to save guest' }); }
+app.delete('/api/guests/:id', async (req, res) => {
+  const { id } = req.params;
+  await pool.query('DELETE FROM guests WHERE id = $1', [id]);
+  res.json({ ok: true });
 });
 
-app.delete('/api/guests/:id', requireSyncKey, async (req, res) => {
-  try {
-    await pool.query('DELETE FROM guests WHERE sync_key=$1 AND id=$2', [req.syncKey, req.params.id]);
-    res.json({ ok: true });
-  } catch (e) { console.error(e); res.status(500).json({ error: 'Failed to delete guest' }); }
+app.get('/api/card-settings', async (req, res) => {
+  const { syncKey } = req.query;
+  const result = await pool.query('SELECT data FROM settings WHERE sync_key = $1', [syncKey]);
+  res.json(result.rows[0]?.data || null);
 });
 
-app.get('/api/card-settings', requireSyncKey, async (req, res) => {
-  try {
-    const { rows } = await pool.query('SELECT settings FROM invitation_card_settings WHERE sync_key=$1', [req.syncKey]);
-    res.json(rows[0]?.settings || null);
-  } catch (e) { console.error(e); res.status(500).json({ error: 'Failed to load card settings' }); }
+app.put('/api/card-settings', async (req, res) => {
+  const { syncKey } = req.query;
+  const data = req.body;
+  await pool.query(
+    'INSERT INTO settings (sync_key, data) VALUES ($1, $2) ON CONFLICT (sync_key) DO UPDATE SET data = $2',
+    [syncKey, JSON.stringify(data)]
+  );
+  res.json({ ok: true });
 });
 
-app.put('/api/card-settings', requireSyncKey, async (req, res) => {
-  try {
-    await pool.query(`
-      INSERT INTO invitation_card_settings (sync_key, settings, updated_at)
-      VALUES ($1,$2,now())
-      ON CONFLICT (sync_key) DO UPDATE SET settings=excluded.settings, updated_at=now()`,
-      [req.syncKey, JSON.stringify(req.body || {})]);
-    res.json({ ok: true });
-  } catch (e) { console.error(e); res.status(500).json({ error: 'Failed to save card settings' }); }
-});
-
-app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
-
-const port = Number(process.env.PORT || 3000);
-app.listen(port, () => console.log(`Invitation app running on port ${port}`));
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
