@@ -3,11 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Guest & Godparent Manager (Cloud Synced)</title>
+  <title>Guest & Godparent Manager + Double-Sided Invitation Studio</title>
   
   <!-- Font Awesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
+  <!-- Google Fonts for Invitation Typography -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Dancing+Script:wght@600;700&family=Great+Vibes&family=Montserrat:wght@400;600&family=Playfair+Display:ital,wght@0,600;1,400&family=Caveat:wght@600&display=swap">
+  <!-- html2canvas for High-Res Image Downloads -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
   <style>
     :root {
       --primary: #4f46e5;
@@ -23,6 +27,14 @@
       --border-color: #e2e8f0;
       --radius: 12px;
       --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+
+      /* Dynamic Invitation Theme Variables */
+      --card-bg-color: #fdf2f8;
+      --card-text-color: #4c1d95;
+      --card-accent-color: #c084fc;
+      --card-border-color: #f472b6;
+      --card-overlay-bg: rgba(255, 255, 255, 0.75);
+      --card-font-family: 'Playfair Display', serif;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -35,7 +47,7 @@
       min-height: 100vh;
     }
 
-    .container { max-width: 900px; margin: 0 auto; }
+    .container { max-width: 1050px; margin: 0 auto; }
 
     header {
       background: var(--card-bg);
@@ -64,6 +76,13 @@
       margin-top: 0.25rem;
     }
 
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
     .sync-bar {
       display: flex;
       align-items: center;
@@ -82,19 +101,22 @@
       color: #166534;
     }
 
-    .btn-sync-link {
+    .btn-sync-link, .btn-studio-toggle {
       background: var(--primary);
       color: white;
       border: none;
-      padding: 0.35rem 0.7rem;
-      border-radius: 12px;
-      font-size: 0.75rem;
+      padding: 0.5rem 0.9rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
       font-weight: 600;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 0.3rem;
+      gap: 0.4rem;
     }
+
+    .btn-studio-toggle { background: #8b5cf6; }
+    .btn-studio-toggle:hover { background: #7c3aed; }
 
     .stats-grid {
       display: grid;
@@ -141,6 +163,337 @@
       margin-bottom: 1.5rem;
     }
 
+    /* INVITATION STUDIO SECTION */
+    .studio-panel {
+      display: grid;
+      grid-template-columns: 1fr 1.1fr;
+      gap: 1.5rem;
+      margin-top: 1rem;
+    }
+
+    @media (max-width: 850px) {
+      .studio-panel { grid-template-columns: 1fr; }
+    }
+
+    .preset-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .preset-btn {
+      padding: 0.5rem;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: white;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .preset-swatch {
+      width: 100%;
+      height: 18px;
+      border-radius: 4px;
+    }
+
+    /* PAGE TOGGLE BAR */
+    .page-nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #f1f5f9;
+      padding: 0.5rem 0.75rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+
+    .page-nav-btns { display: flex; gap: 0.4rem; }
+
+    .btn-page-tab {
+      padding: 0.35rem 0.8rem;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background: white;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-page-tab.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    /* CARD CANVAS PREVIEW */
+    .card-preview-container {
+      background: #334155;
+      padding: 1.5rem;
+      border-radius: var(--radius);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 580px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .invitation-card {
+      width: 320px;
+      height: 480px;
+      background-color: var(--card-bg-color);
+      color: var(--card-text-color);
+      font-family: var(--card-font-family);
+      border: 6px double var(--card-border-color);
+      border-radius: 12px;
+      padding: 1.25rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      position: relative;
+      background-size: cover;
+      background-position: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      text-align: center;
+      overflow: hidden;
+      transition: width 0.3s ease, height 0.3s ease;
+    }
+
+    .card-overlay {
+      position: absolute;
+      inset: 8px;
+      background: var(--card-overlay-bg);
+      border-radius: 6px;
+      padding: 0.85rem;
+      border: 1px solid var(--card-accent-color);
+      overflow: hidden;
+    }
+
+    /* ALIGNMENT GUIDELINES */
+    .guide-line-v {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 1px;
+      border-left: 1px dashed #ef4444;
+      display: none;
+      z-index: 100;
+      pointer-events: none;
+    }
+
+    .guide-line-h {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 50%;
+      height: 1px;
+      border-top: 1px dashed #ef4444;
+      display: none;
+      z-index: 100;
+      pointer-events: none;
+    }
+
+    /* Draggable & Resizable Elements Styling */
+    .draggable {
+      position: absolute;
+      cursor: move;
+      user-select: none;
+      display: inline-block;
+      padding: 4px 8px;
+      border: 1px dashed transparent;
+      border-radius: 4px;
+      transition: border-color 0.2s;
+      box-sizing: border-box;
+      min-width: 35px;
+      min-height: 25px;
+      z-index: 5; /* Default Layer */
+    }
+
+    .draggable.selected-for-resize {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 1px rgba(79,70,229,.25);
+    }
+
+    /* Word-Style Text Wrapping Z-Index Classes */
+    .draggable.wrap-behind {
+      z-index: 1 !important;
+    }
+    .draggable.wrap-infront {
+      z-index: 10 !important;
+    }
+
+    .resize-handle {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: white;
+      border: 2px solid var(--primary);
+      border-radius: 2px;
+      z-index: 30;
+      display: none;
+      box-sizing: border-box;
+    }
+    .draggable:hover .resize-handle,
+    .draggable.selected-for-resize .resize-handle { display: block; }
+    .resize-handle.nw { left: -6px; top: -6px; cursor: nwse-resize; }
+    .resize-handle.ne { right: -6px; top: -6px; cursor: nesw-resize; }
+    .resize-handle.sw { left: -6px; bottom: -6px; cursor: nesw-resize; }
+    .resize-handle.se { right: -6px; bottom: -6px; cursor: nwse-resize; }
+
+    .draggable:hover, .draggable.active {
+      border-color: var(--primary);
+    }
+
+    .draggable img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: 6px;
+      pointer-events: none;
+      display: block;
+    }
+
+    /* Element Control Buttons */
+    .draggable-controls {
+      display: none;
+      position: absolute;
+      top: -12px;
+      right: -10px;
+      gap: 4px;
+      z-index: 40;
+    }
+
+    .draggable:hover .draggable-controls,
+    .draggable.active .draggable-controls,
+    .draggable.selected-for-resize .draggable-controls {
+      display: flex;
+    }
+
+    .control-btn {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: none;
+      color: white;
+      font-size: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .btn-delete { background: var(--danger); }
+    .btn-rotate { background: var(--primary); }
+
+    .card-header-title { font-size: 1.3rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+    .card-subtitle { font-size: 0.8rem; font-style: italic; margin-top: 0.2rem; }
+    .card-child-name { font-size: 1.8rem; font-weight: bold; margin: 0.4rem 0; color: var(--card-text-color); }
+    .card-details { font-size: 0.75rem; line-height: 1.4; }
+    
+    /* Page 2: Dedicated Final Godparents Container */
+    .card-godparents-box {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+
+    .card-godparents-header {
+      text-align: center;
+      margin-bottom: 0.5rem;
+      border-bottom: 1.5px solid var(--card-accent-color);
+      padding-bottom: 0.35rem;
+    }
+
+    .card-godparents-title {
+      font-weight: 700;
+      font-size: 1.1rem;
+      letter-spacing: 0.5px;
+      color: var(--card-text-color);
+      text-transform: uppercase;
+    }
+
+    .card-godparents-sub {
+      font-size: 0.68rem;
+      font-style: italic;
+      color: var(--text-muted);
+      margin-top: 0.1rem;
+    }
+
+    .godparents-list-preview {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-auto-rows: minmax(0, auto);
+      gap: 0.25rem;
+      flex: 1 1 auto;
+      min-height: 0;
+      width: 100%;
+      box-sizing: border-box;
+      align-content: start;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .godparent-tag {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 0.15rem 0.35rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      line-height: 1.15;
+      text-align: left;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      white-space: normal;
+      color: var(--card-text-color);
+      box-sizing: border-box;
+      break-inside: avoid;
+    }
+
+    .envelope-box {
+      width: 280px;
+      height: 180px;
+      background: #fbcfe8;
+      border: 2px solid #f472b6;
+      border-radius: 8px;
+      position: relative;
+      margin: 2rem auto;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+      transition: transform 0.3s;
+    }
+
+    .envelope-box:hover { transform: scale(1.03); }
+
+    .wax-seal {
+      width: 45px;
+      height: 45px;
+      background: #db2777;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    }
+
     .form-grid {
       display: grid;
       grid-template-columns: 2fr 1.2fr 1fr;
@@ -153,7 +506,7 @@
     .form-group { display: flex; flex-direction: column; gap: 0.35rem; }
     .form-group label { font-size: 0.85rem; font-weight: 600; }
 
-    input[type="text"], select {
+    input[type="text"], input[type="number"], select, textarea {
       width: 100%;
       padding: 0.65rem 0.8rem;
       border: 1px solid var(--border-color);
@@ -240,6 +593,26 @@
     .search-box i { position: absolute; left: 0.8rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
     .search-box input { padding-left: 2.3rem; }
 
+    .btn-sort {
+      background: white;
+      border: 1px solid var(--border-color);
+      padding: 0.65rem 1rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-main);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-sort.active {
+      background: #e0e7ff;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
     .filter-tabs { display: flex; gap: 0.4rem; overflow-x: auto; padding-bottom: 0.25rem; }
 
     .tab-btn {
@@ -303,7 +676,7 @@
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(15, 23, 42, 0.5);
+      background: rgba(15, 23, 42, 0.6);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -320,15 +693,18 @@
       background: white;
       border-radius: var(--radius);
       width: 100%;
-      max-width: 500px;
+      max-width: 550px;
       overflow: hidden;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
     }
 
-    .modal-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; }
-    .modal-body { padding: 1.5rem; display: flex; flex-direction: column; gap: 1.25rem; }
+    .modal-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+    .modal-body { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; overflow-y: auto; }
     .modal-footer { padding: 1rem 1.5rem; background: #f8fafc; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 0.75rem; }
 
-    .btn-secondary { background: white; border: 1px solid var(--border-color); padding: 0.6rem 1.2rem; border-radius: 8px; cursor: pointer; }
+    .btn-secondary { background: white; border: 1px solid var(--border-color); padding: 0.6rem 1.2rem; border-radius: 8px; cursor: pointer; font-weight: 600; }
     
     .toast {
       position: fixed;
@@ -343,6 +719,39 @@
       z-index: 2000;
       box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
     }
+
+    .studio-element-tools {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .studio-element-tools button, .studio-element-tools label {
+      flex: 1;
+      padding: 0.45rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.3rem;
+    }
+
+    .studio-element-tools button:hover, .studio-element-tools label:hover {
+      background: #f1f5f9;
+    }
+
+    .element-editor {
+      background: #f8fafc; border: 1px solid var(--border-color); padding: .85rem; border-radius: 8px;
+    }
+    .element-editor-title { font-size:.85rem; font-weight:700; color:var(--primary); margin-bottom:.45rem; }
+    .element-editor .tool-row { display:grid; grid-template-columns:repeat(4,1fr); gap:.35rem; margin-bottom: 0.5rem; }
+    .element-editor button { padding:.4rem .3rem; border:1px solid var(--border-color); background:white; border-radius:6px; cursor:pointer; font-size:.72rem; font-weight:600; }
+    .element-editor button:hover { background:#eef2ff; }
   </style>
 </head>
 <body>
@@ -350,14 +759,19 @@
   <div class="container">
     <header>
       <div class="title-group">
-        <h1><i class="fa-solid fa-cloud"></i> Internet Synced Guest Manager</h1>
-        <p>Real-time internet cloud storage — access and edit from any device.</p>
+        <h1><i class="fa-solid fa-cloud"></i> Guest & Godparent Manager</h1>
+        <p>Real-time internet cloud storage + Live Custom Dimension Invitation Studio</p>
       </div>
-      <div class="sync-bar">
-        <div class="sync-status">
-          <i class="fa-solid fa-signal" id="syncIcon"></i> <span id="syncText">Connected to Cloud</span>
+      <div class="header-actions">
+        <button class="btn-studio-toggle" onclick="toggleStudioPanel()">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> Invitation Studio
+        </button>
+        <div class="sync-bar">
+          <div class="sync-status">
+            <i class="fa-solid fa-signal" id="syncIcon"></i> <span id="syncText">Connected to Cloud</span>
+          </div>
+          <button class="btn-sync-link" onclick="copySyncLink()"><i class="fa-solid fa-link"></i> Sync Link</button>
         </div>
-        <button class="btn-sync-link" onclick="copySyncLink()"><i class="fa-solid fa-link"></i> Sync Link</button>
       </div>
     </header>
 
@@ -379,6 +793,294 @@
         <span class="stat-label">Godparent Fees Paid</span>
         <span class="stat-value" id="statFeesPaid">0 / 0</span>
         <span class="stat-sub" id="statFeesPercentage">0% collected</span>
+      </div>
+    </div>
+
+    <!-- INVITATION STUDIO CREATOR PANEL -->
+    <div class="card" id="invitationStudioCard" style="display: none;">
+      <h2 style="font-size: 1.2rem; color: var(--primary); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+        <i class="fa-solid fa-paint-brush"></i> Double-Sided Invitation Card Studio
+      </h2>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Design back-to-back invitations, drag photos/text freely, resize elements by dragging corners, and set MS Word-style Wrap Text layering (In Front / Behind Text).</p>
+
+      <!-- Page Switcher Bar -->
+      <div class="page-nav-bar">
+        <div class="page-nav-btns">
+          <button type="button" class="btn-page-tab active" id="tabFrontPage" onclick="switchCardPage('front')">
+            <i class="fa-solid fa-file"></i> Page 1 (Front Cover)
+          </button>
+          <button type="button" class="btn-page-tab" id="tabBackPage" onclick="switchCardPage('back')">
+            <i class="fa-solid fa-crown"></i> Page 2 (Final Godparents List)
+          </button>
+        </div>
+        <div>
+          <label style="font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; font-weight: 600;">
+            <input type="checkbox" id="enableDoubleSidedToggle" checked onchange="toggleDoubleSidedMode(this.checked)">
+            Enable Back-to-Back (2 Pages)
+          </label>
+        </div>
+      </div>
+
+      <div class="studio-panel">
+        <!-- Controls Column -->
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+          
+          <!-- DYNAMIC ELEMENT CREATION TOOLS -->
+          <div style="background: #e0e7ff; border: 1px solid #c7d2fe; padding: 0.85rem; border-radius: 8px;">
+            <label style="font-size: 0.85rem; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.4rem;">
+              <i class="fa-solid fa-plus-circle"></i> Add Freely Draggable Elements
+            </label>
+            <div class="studio-element-tools">
+              <button type="button" onclick="addFreelyDraggableText()"><i class="fa-solid fa-font"></i> + Add Textbox</button>
+              <label for="customPhotoLoader"><i class="fa-solid fa-image"></i> + Add Photo</label>
+              <input type="file" id="customPhotoLoader" accept="image/*" style="display: none;" onchange="handleDraggablePhotoUpload(event)">
+            </div>
+          </div>
+
+          <!-- ELEMENT WRAP TEXT & ALIGNMENT PANEL -->
+          <div class="element-editor" id="elementEditorPanel">
+            <div class="element-editor-title"><i class="fa-solid fa-layer-group"></i> MS Word-Style Text Wrapping & Layering</div>
+            <div style="font-size:.75rem;color:var(--text-muted);margin-bottom:.5rem;">Select any photo or text box to send behind or bring in front of other elements. Drag corners to resize freely.</div>
+            
+            <!-- Wrap Text Options -->
+            <div class="tool-row" style="grid-template-columns: repeat(2, 1fr); gap: 0.4rem;">
+              <button type="button" onclick="setWrapText('behind')" style="background: #e0e7ff; color: var(--primary); border-color: #c7d2fe;">
+                <i class="fa-solid fa-layer-group"></i> Behind Text
+              </button>
+              <button type="button" onclick="setWrapText('infront')" style="background: #e0e7ff; color: var(--primary); border-color: #c7d2fe;">
+                <i class="fa-solid fa-clone"></i> In Front of Text
+              </button>
+            </div>
+            <div class="tool-row" style="grid-template-columns: repeat(2, 1fr); gap: 0.4rem; margin-bottom: 0.75rem;">
+              <button type="button" onclick="changeLayer('forward')"><i class="fa-solid fa-arrow-up"></i> Bring Forward</button>
+              <button type="button" onclick="changeLayer('backward')"><i class="fa-solid fa-arrow-down"></i> Send Backward</button>
+            </div>
+
+            <div class="element-editor-title" style="margin-top: 0.5rem;"><i class="fa-solid fa-expand"></i> Alignment Tools</div>
+            <div class="tool-row">
+              <button type="button" onclick="alignSelectedElement('left')">Left</button>
+              <button type="button" onclick="alignSelectedElement('centerX')">Center H</button>
+              <button type="button" onclick="alignSelectedElement('right')">Right</button>
+              <button type="button" onclick="alignSelectedElement('top')">Top</button>
+              <button type="button" onclick="alignSelectedElement('centerY')">Center V</button>
+              <button type="button" onclick="alignSelectedElement('bottom')">Bottom</button>
+              <button type="button" onclick="alignSelectedElement('center')">Center</button>
+              <button type="button" onclick="autoAlignAllElements()">Auto Align</button>
+            </div>
+          </div>
+
+          <!-- CUSTOM CENTIMETER SIZE & ORIENTATION CONTROL -->
+          <div style="background: #f8fafc; border: 1px solid var(--border-color); padding: 0.85rem; border-radius: 8px;">
+            <label style="font-size: 0.85rem; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.5rem;">
+              <i class="fa-solid fa-ruler-combined"></i> Card Layout & Dimensions (Centimeters)
+            </label>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 0.5rem;">
+              <div class="form-group">
+                <label style="font-size: 0.75rem;">Orientation</label>
+                <select id="cardOrientation" onchange="changeOrientation(this.value)">
+                  <option value="portrait">Portrait (Vertical)</option>
+                  <option value="landscape">Landscape (Horizontal)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label style="font-size: 0.75rem;">Swap Axes</label>
+                <button type="button" class="preset-btn" style="padding: 0.6rem 0.5rem; height: 38px;" onclick="swapDimensions()">
+                  <i class="fa-solid fa-rotate"></i> Swap W & H
+                </button>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 0.5rem;">
+              <div class="form-group">
+                <label style="font-size: 0.75rem;">Width (cm)</label>
+                <input type="number" id="cardWidthCm" value="12.7" step="0.1" min="5" max="50" oninput="updateCardDimensions()">
+              </div>
+              <div class="form-group">
+                <label style="font-size: 0.75rem;">Height (cm)</label>
+                <input type="number" id="cardHeightCm" value="17.8" step="0.1" min="5" max="50" oninput="updateCardDimensions()">
+              </div>
+            </div>
+            
+            <div style="display: flex; gap: 0.3rem; flex-wrap: wrap;">
+              <button type="button" class="preset-btn" style="padding: 0.3rem 0.5rem; flex: 1;" onclick="setCustomCm(12.7, 17.8)">5x7 in (12.7×17.8cm)</button>
+              <button type="button" class="preset-btn" style="padding: 0.3rem 0.5rem; flex: 1;" onclick="setCustomCm(10.2, 15.2)">4x6 in (10.2×15.2cm)</button>
+              <button type="button" class="preset-btn" style="padding: 0.3rem 0.5rem; flex: 1;" onclick="setCustomCm(10, 10)">Square (10×10cm)</button>
+              <button type="button" class="preset-btn" style="padding: 0.3rem 0.5rem; flex: 1;" onclick="setCustomCm(14.8, 21.0)">A5 (14.8×21cm)</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Pastel Color Theme Presets</label>
+            <div class="preset-grid">
+              <button type="button" class="preset-btn" onclick="applyPalette('blush')">
+                <div class="preset-swatch" style="background: linear-gradient(to right, #fdf2f8, #f472b6, #c084fc);"></div>
+                Blush & Lavender
+              </button>
+              <button type="button" class="preset-btn" onclick="applyPalette('lilac')">
+                <div class="preset-swatch" style="background: linear-gradient(to right, #f3e8ff, #a855f7, #ec4899);"></div>
+                Lilac Dream
+              </button>
+              <button type="button" class="preset-btn" onclick="applyPalette('cotton')">
+                <div class="preset-swatch" style="background: linear-gradient(to right, #fce7f3, #bae6fd, #38bdf8);"></div>
+                Cotton Candy
+              </button>
+              <button type="button" class="preset-btn" onclick="applyPalette('sage')">
+                <div class="preset-swatch" style="background: linear-gradient(to right, #f0fdf4, #cbd5e1, #c084fc);"></div>
+                Sage & Lavender
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="fontSelect">Typography Style</label>
+            <select id="fontSelect" onchange="updateCardTypography()">
+              <option value="'Playfair Display', serif">Playfair Display (Elegant Serif)</option>
+              <option value="'Great Vibes', cursive">Great Vibes (Romantic Script)</option>
+              <option value="'Dancing Script', cursive">Dancing Script (Soft Calligraphy)</option>
+              <option value="'Cinzel', serif">Cinzel (Classic Roman)</option>
+              <option value="'Caveat', cursive">Caveat (Playful Handdrawn)</option>
+              <option value="'Montserrat', sans-serif">Montserrat (Clean Modern)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="bgImageInput">Custom Background Photo (Current Side)</label>
+            <input type="file" id="bgImageInput" accept="image/*" onchange="handleImageUpload(event)">
+          </div>
+
+          <div class="form-group">
+            <label for="cardOverlayOpacity">Text Overlay Background Transparency</label>
+            <input type="range" id="cardOverlayOpacity" min="0.2" max="0.95" step="0.05" value="0.75" oninput="updateOverlayOpacity(this.value)">
+          </div>
+
+          <hr style="border: 0; border-top: 1px solid var(--border-color);">
+
+          <!-- DYNAMIC FORM FIELDS FOR ACTIVE PAGE -->
+          <div id="pageEditorFront">
+            <h4 style="font-size: 0.85rem; color: var(--primary); margin-bottom: 0.5rem;">Page 1 Content (Front Cover)</h4>
+            <div class="form-group" style="margin-bottom: 0.6rem;">
+              <label for="cardTitleInput">Title</label>
+              <input type="text" id="cardTitleInput" value="Holy Baptism & Dedication" oninput="updateCardText()">
+            </div>
+            <div class="form-group" style="margin-bottom: 0.6rem;">
+              <label for="cardChildInput">Child's Name</label>
+              <input type="text" id="cardChildInput" value="Baby Liam Cristobal" oninput="updateCardText()">
+            </div>
+            <div class="form-group" style="margin-bottom: 0.6rem;">
+              <label for="cardVerseInput">Subtitle / Quote</label>
+              <input type="text" id="cardVerseInput" value="'Every good and perfect gift is from above' — James 1:17" oninput="updateCardText()">
+            </div>
+            <div class="form-group">
+              <label for="cardDetailsInput">Date & Location Summary</label>
+              <textarea id="cardDetailsInput" rows="2" oninput="updateCardText()">Saturday, November 14, 2026 | 10:00 AM&#10;St. Augustine Church, Paoay, Ilocos Norte</textarea>
+            </div>
+          </div>
+
+          <div id="pageEditorBack" style="display: none;">
+            <h4 style="font-size: 0.85rem; color: var(--primary); margin-bottom: 0.5rem;">Page 2 — DEDICATED FINAL GODPARENTS PAGE</h4>
+            <div style="font-size:.75rem;color:var(--text-muted);margin-bottom:.6rem;">This side is strictly dedicated to your final godparents list. All names checked under <strong>Final List</strong> appear automatically with responsive readability scaling.</div>
+            <div class="form-group" style="margin-bottom: 0.6rem;">
+              <label for="cardGodparentHeadingInput">Main Heading Title</label>
+              <input type="text" id="cardGodparentHeadingInput" value="Mga Ninong at Ninang" oninput="updateCardText()">
+            </div>
+            <div class="form-group">
+              <label for="cardGodparentSubheadingInput">Subheading / Message</label>
+              <input type="text" id="cardGodparentSubheadingInput" value="Guiding Lights & Christian Guardians" oninput="updateCardText()">
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Live Preview Canvas Column -->
+        <div class="card-preview-container">
+          
+          <div style="color: white; font-size: 0.8rem; margin-bottom: 0.5rem; font-weight: 600;" id="previewPageIndicator">
+            PREVIEWING: PAGE 1 (FRONT COVER)
+          </div>
+
+          <div style="color: #cbd5e1; font-size: 0.75rem; margin-bottom: 0.75rem; font-weight: 500;" id="liveDimensionLabel">
+            Visualizer Size: 12.7 cm × 17.8 cm (Portrait)
+          </div>
+
+          <!-- THE VISUALIZED CARD CANVAS -->
+          <div class="invitation-card" id="invitationCardPreview">
+            <!-- Dynamic Alignment Crosshairs -->
+            <div class="guide-line-v" id="guideV"></div>
+            <div class="guide-line-h" id="guideH"></div>
+
+            <div class="card-overlay" id="cardOverlay">
+              
+              <!-- PAGE 1 FRONT COVER -->
+              <div id="frontCardContent" style="width: 100%; height: 100%; position: relative;">
+                
+                <div class="draggable" style="top: 15px; left: 15px; width: 90%;">
+                  <div class="draggable-controls">
+                    <button type="button" class="control-btn btn-rotate" onclick="rotateElement(this)">↻</button>
+                    <button type="button" class="control-btn btn-delete" onclick="deleteElement(this)">×</button>
+                  </div>
+                  <div class="card-header-title" id="previewTitle">Holy Baptism & Dedication</div>
+                  <div class="card-subtitle" id="previewVerse">'Every good and perfect gift is from above' — James 1:17</div>
+                </div>
+
+                <div class="draggable" style="top: 120px; left: 15px; width: 90%;">
+                  <div class="draggable-controls">
+                    <button type="button" class="control-btn btn-rotate" onclick="rotateElement(this)">↻</button>
+                    <button type="button" class="control-btn btn-delete" onclick="deleteElement(this)">×</button>
+                  </div>
+                  <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">We Invite You To Celebrate</div>
+                  <div class="card-child-name" id="previewChild">Baby Liam Cristobal</div>
+                  <div class="card-details" id="previewDetails">
+                    Saturday, November 14, 2026 | 10:00 AM<br>St. Augustine Church, Paoay, Ilocos Norte
+                  </div>
+                </div>
+
+                <div class="draggable" style="bottom: 10px; left: 15px; width: 90%;">
+                  <div class="draggable-controls">
+                    <button type="button" class="control-btn btn-rotate" onclick="rotateElement(this)">↻</button>
+                    <button type="button" class="control-btn btn-delete" onclick="deleteElement(this)">×</button>
+                  </div>
+                  <div style="font-size: 0.7rem; opacity: 0.8;">See Back Page For Godparents & Details &rarr;</div>
+                </div>
+
+              </div>
+
+              <!-- PAGE 2 DEDICATED FINAL GODPARENTS PAGE -->
+              <div id="backCardContent" style="display: none; width: 100%; height: 100%; position: relative;">
+                
+                <div class="card-godparents-box">
+                  <div class="card-godparents-header">
+                    <div class="card-godparents-title" id="previewGodparentHeading">Mga Ninong at Ninang</div>
+                    <div class="card-godparents-sub" id="previewGodparentSubheading">Guiding Lights & Christian Guardians</div>
+                  </div>
+                  
+                  <!-- Responsive Final Godparents Grid -->
+                  <div class="godparents-list-preview" id="previewGodparentsList">
+                    <!-- Dynamically rendered Final Godparents -->
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ACTION BUTTONS TOOLBAR -->
+          <div style="margin-top: 1.25rem; display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center;">
+            <button class="btn-primary" style="width: auto; background: #0284c7;" onclick="downloadCardImage('png')">
+              <i class="fa-solid fa-file-image"></i> Download PNG
+            </button>
+            <button class="btn-primary" style="width: auto; background: #d97706;" onclick="downloadCardImage('jpeg')">
+              <i class="fa-solid fa-file-image"></i> Download JPG
+            </button>
+            <button class="btn-primary" style="width: auto; background: #0b9f6e;" onclick="openPrintModal()">
+              <i class="fa-solid fa-print"></i> Print & Export PDF
+            </button>
+            <button class="btn-primary" style="width: auto; background: #ec4899;" onclick="openEnvelopeModal()">
+              <i class="fa-solid fa-envelope"></i> Digital Envelope
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -426,6 +1128,9 @@
           <i class="fa-solid fa-magnifying-glass"></i>
           <input type="text" id="searchInput" placeholder="Search by name...">
         </div>
+        <button class="btn-sort" id="sortAlphabeticalBtn" onclick="toggleAlphabeticalSort()">
+          <i class="fa-solid fa-arrow-down-a-z"></i> Sort A-Z
+        </button>
       </div>
 
       <div class="filter-tabs">
@@ -463,7 +1168,7 @@
     <div class="modal">
       <div class="modal-header">
         <h3>Edit Guest</h3>
-        <button class="btn-icon" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+        <button class="btn-icon" onclick="closeModal('editModal')"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="modal-body">
         <input type="hidden" id="editGuestId">
@@ -493,105 +1198,599 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn-secondary" onclick="closeModal('editModal')">Cancel</button>
         <button class="btn-primary" style="width: auto;" onclick="saveGuestEdit()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRINT PREVIEW & SIZES MODAL -->
+  <div class="modal-overlay" id="printModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-print"></i> Printable Layout & Custom Centimeter Dimensions</h3>
+        <button class="btn-icon" onclick="closeModal('printModal')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div style="background: #f1f5f9; padding: 1rem; border-radius: 8px; text-align: center;" id="printGuideDisplay">
+          <strong>Configured Custom Dimension:</strong><br>
+          <span style="font-size: 1.1rem; color: var(--primary); font-weight: bold;" id="modalDimensionDisplay">12.7 cm × 17.8 cm</span><br>
+          <span style="font-size: 0.8rem; color: var(--text-muted);">Double-Sided 2-Page Print Layout enabled with standard margins.</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeModal('printModal')">Close</button>
+        <button class="btn-primary" style="width: auto;" onclick="window.print()">
+          <i class="fa-solid fa-file-pdf"></i> Print / Save PDF
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIGITAL ENVELOPE MODAL -->
+  <div class="modal-overlay" id="envelopeModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-envelope-open-text"></i> Digital Envelope Experience</h3>
+        <button class="btn-icon" onclick="closeModal('envelopeModal')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body" style="text-align: center;">
+        <p style="font-size: 0.85rem; color: var(--text-muted);">Click the wax seal to unseal the invitation!</p>
+        <div class="envelope-box" onclick="triggerEnvelopeOpen()">
+          <div class="wax-seal" id="waxSeal">LK</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeModal('envelopeModal')">Close</button>
       </div>
     </div>
   </div>
 
   <div class="toast" id="toast"></div>
 
-  <!-- Firebase JavaScript SDK for Realtime Internet Storage -->
+  <!-- CockroachDB backend integration (via this app's Node/Express API) -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-    // Obtain or generate unique cloud sync key for internet sharing
     const urlParams = new URLSearchParams(window.location.search);
     let syncKey = urlParams.get('syncKey');
 
     if (!syncKey) {
       syncKey = localStorage.getItem('guest_sync_key') || 'list_' + Math.random().toString(36).substring(2, 9);
       localStorage.setItem('guest_sync_key', syncKey);
-      
-      const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?syncKey=' + syncKey;
+      const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?syncKey=' + encodeURIComponent(syncKey);
       window.history.replaceState({ path: newUrl }, '', newUrl);
     } else {
       localStorage.setItem('guest_sync_key', syncKey);
     }
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCkU6-x0hW8A14QfY1ajExo4rwiqLY7z6Q",
-  authDomain: "trackerzia.firebaseapp.com",
-  projectId: "trackerzia",
-  storageBucket: "trackerzia.firebasestorage.app",
-  messagingSenderId: "222207319535",
-  appId: "1:222207319535:web:a08ac6ec1fbed915f0ea1a",
-  measurementId: "G-NVX6SD6FW4"
-};    
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const guestCollection = collection(db, "guest_lists", syncKey, "items");
+    const apiBase = '/api';
+    const guestApi = `${apiBase}/guests?syncKey=${encodeURIComponent(syncKey)}`;
+    const settingsApi = `${apiBase}/card-settings?syncKey=${encodeURIComponent(syncKey)}`;
 
     window.guests = [];
     window.currentFilter = 'all';
     window.searchQuery = '';
+    window.isAlphabetical = false;
+    window.activeCardPage = 'front';
+    window.isDoubleSided = true;
+    window.frontBgImage = '';
+    window.backBgImage = '';
+    window.activeTheme = 'blush';
 
-    // Listen live to real-time internet database changes
-    onSnapshot(guestCollection, (snapshot) => {
-      window.guests = [];
-      snapshot.forEach(docSnap => {
-        window.guests.push({ id: docSnap.id, ...docSnap.data() });
-      });
+    function setSyncStatus(ok, text) {
+      const icon = document.getElementById('syncIcon');
+      const label = document.getElementById('syncText');
+      if (icon) icon.className = ok ? 'fa-solid fa-cloud-check' : 'fa-solid fa-triangle-exclamation';
+      if (label) label.textContent = text;
+    }
 
-      document.getElementById('syncIcon').className = 'fa-solid fa-cloud-check';
-      document.getElementById('syncText').textContent = 'Synced to Internet';
-      renderApp();
-    }, (err) => {
-      console.warn("Cloud read fallback:", err);
-      window.guests = JSON.parse(localStorage.getItem('backup_guest_list_' + syncKey)) || [];
-      renderApp();
-    });
+    async function loadGuests() {
+      try {
+        const response = await fetch(guestApi, { cache: 'no-store' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        window.guests = Array.isArray(data) ? data : [];
+        localStorage.setItem('backup_guest_list_' + syncKey, JSON.stringify(window.guests));
+        setSyncStatus(true, 'Synced to CockroachDB');
+        renderApp();
+      } catch (err) {
+        console.warn('CockroachDB read fallback:', err);
+        window.guests = JSON.parse(localStorage.getItem('backup_guest_list_' + syncKey)) || [];
+        setSyncStatus(false, 'Offline / Local Backup');
+        renderApp();
+      }
+    }
+
+    async function loadCardSettings() {
+      try {
+        const response = await fetch(settingsApi, { cache: 'no-store' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        if (data) applyLoadedCardSettings(data);
+      } catch (err) {
+        console.warn('CockroachDB card settings fallback:', err);
+        const backup = JSON.parse(localStorage.getItem('backup_card_settings_' + syncKey));
+        if (backup) applyLoadedCardSettings(backup);
+      }
+    }
+
+    window.autoSaveCardSettings = async function() {
+      const settingsData = {
+        cardWidthCm: parseFloat(document.getElementById('cardWidthCm').value) || 12.7,
+        cardHeightCm: parseFloat(document.getElementById('cardHeightCm').value) || 17.8,
+        orientation: document.getElementById('cardOrientation').value,
+        fontStyle: document.getElementById('fontSelect').value,
+        overlayOpacity: document.getElementById('cardOverlayOpacity').value,
+        theme: window.activeTheme || 'blush',
+        isDoubleSided: window.isDoubleSided,
+        title: document.getElementById('cardTitleInput').value,
+        childName: document.getElementById('cardChildInput').value,
+        verse: document.getElementById('cardVerseInput').value,
+        details: document.getElementById('cardDetailsInput').value,
+        godparentHeading: document.getElementById('cardGodparentHeadingInput').value,
+        godparentSubheading: document.getElementById('cardGodparentSubheadingInput').value,
+        frontBgImage: window.frontBgImage || '',
+        backBgImage: window.backBgImage || ''
+      };
+
+      localStorage.setItem('backup_card_settings_' + syncKey, JSON.stringify(settingsData));
+      try {
+        const response = await fetch(settingsApi, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(settingsData)
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        setSyncStatus(true, 'Synced to CockroachDB');
+      } catch (e) {
+        console.error('Card settings save error:', e);
+        setSyncStatus(false, 'Saved locally; DB unavailable');
+      }
+    };
+
+    function applyLoadedCardSettings(data) {
+      if (!data) return;
+      if (data.cardWidthCm) document.getElementById('cardWidthCm').value = data.cardWidthCm;
+      if (data.cardHeightCm) document.getElementById('cardHeightCm').value = data.cardHeightCm;
+      if (data.orientation) document.getElementById('cardOrientation').value = data.orientation;
+      if (data.fontStyle) { document.getElementById('fontSelect').value = data.fontStyle; updateCardTypography(); }
+      if (data.overlayOpacity) { document.getElementById('cardOverlayOpacity').value = data.overlayOpacity; updateOverlayOpacity(data.overlayOpacity); }
+      if (data.theme) { window.activeTheme = data.theme; applyPalette(data.theme, false); }
+      if (typeof data.isDoubleSided === 'boolean') {
+        window.isDoubleSided = data.isDoubleSided;
+        document.getElementById('enableDoubleSidedToggle').checked = data.isDoubleSided;
+      }
+      if (data.title !== undefined) document.getElementById('cardTitleInput').value = data.title;
+      if (data.childName !== undefined) document.getElementById('cardChildInput').value = data.childName;
+      if (data.verse !== undefined) document.getElementById('cardVerseInput').value = data.verse;
+      if (data.details !== undefined) document.getElementById('cardDetailsInput').value = data.details;
+      if (data.godparentHeading !== undefined) document.getElementById('cardGodparentHeadingInput').value = data.godparentHeading;
+      if (data.godparentSubheading !== undefined) document.getElementById('cardGodparentSubheadingInput').value = data.godparentSubheading;
+      if (data.frontBgImage !== undefined) window.frontBgImage = data.frontBgImage;
+      if (data.backBgImage !== undefined) window.backBgImage = data.backBgImage;
+      const cardPreview = document.getElementById('invitationCardPreview');
+      if (window.activeCardPage === 'front') cardPreview.style.backgroundImage = window.frontBgImage ? `url('${window.frontBgImage}')` : 'none';
+      else cardPreview.style.backgroundImage = window.backBgImage ? `url('${window.backBgImage}')` : 'none';
+      updateCardText(false);
+      updateCardDimensions(false);
+    }
 
     window.saveToInternet = async function(guestData) {
+      localStorage.setItem('backup_guest_list_' + syncKey, JSON.stringify(window.guests));
       try {
-        localStorage.setItem('backup_guest_list_' + syncKey, JSON.stringify(window.guests));
-        await setDoc(doc(db, "guest_lists", syncKey, "items", guestData.id), guestData);
+        const response = await fetch(`${apiBase}/guests/${encodeURIComponent(guestData.id)}?syncKey=${encodeURIComponent(syncKey)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(guestData)
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        setSyncStatus(true, 'Synced to CockroachDB');
       } catch (e) {
-        console.error("Save error:", e);
+        console.error('Save error:', e);
+        setSyncStatus(false, 'Saved locally; DB unavailable');
       }
     };
 
     window.deleteFromInternet = async function(id) {
       try {
-        await deleteDoc(doc(db, "guest_lists", syncKey, "items", id));
+        const response = await fetch(`${apiBase}/guests/${encodeURIComponent(id)}?syncKey=${encodeURIComponent(syncKey)}`, { method: 'DELETE' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        await loadGuests();
       } catch (e) {
-        console.error("Delete error:", e);
+        console.error('Delete error:', e);
+        setSyncStatus(false, 'Delete failed; DB unavailable');
       }
     };
 
     window.copySyncLink = function() {
       const shareUrl = window.location.href;
-      navigator.clipboard.writeText(shareUrl).then(() => {
-        showToast("Sync link copied! Open this URL on your phone or tablet.");
-      }).catch(() => {
-        prompt("Copy this link to access your data on another device:", shareUrl);
-      });
+      navigator.clipboard.writeText(shareUrl).then(() => showToast('Sync link copied! Open this URL on another device.')).catch(() => prompt('Copy this link to access your data on another device:', shareUrl));
     };
 
-    function showToast(msg) {
+    window.showToast = function(msg) {
       const toast = document.getElementById('toast');
       toast.textContent = msg;
       toast.style.display = 'block';
       setTimeout(() => { toast.style.display = 'none'; }, 3000);
-    }
+    };
+
+    loadGuests();
+    loadCardSettings();
+
+    // CockroachDB has no Firestore-style onSnapshot listener in this app architecture.
+    // Polling keeps multiple open devices synchronized without exposing DB credentials.
+    setInterval(loadGuests, 3000);
+    setInterval(loadCardSettings, 5000);
   </script>
 
   <script>
+    let activeElement = null;
+    let initialX, initialY;
+    const SNAP_THRESHOLD = 8;
+
     document.addEventListener('DOMContentLoaded', () => {
       setupEventListeners();
+      renderGodparentsOnCard();
+      updateCardDimensions(false);
+      setupDraggableHandlers();
+      initializeResizeHandles();
+      selectElementForEditing(document.querySelector('.draggable'));
     });
+
+    /* Universal Free Drag & Drop Event Listeners with Alignment Guidelines & Corner Resizing */
+    function setupDraggableHandlers() {
+      document.addEventListener('mousedown', dragStart);
+      document.addEventListener('mouseup', dragEnd);
+      document.addEventListener('mousemove', drag);
+      document.addEventListener('mousedown', resizeStart);
+      document.addEventListener('mousemove', resizeMove);
+      document.addEventListener('mouseup', resizeEnd);
+
+      document.addEventListener('touchstart', dragStart, { passive: false });
+      document.addEventListener('touchstart', resizeStart, { passive: false });
+      document.addEventListener('touchmove', resizeMove, { passive: false });
+      document.addEventListener('touchend', resizeEnd);
+      document.addEventListener('touchend', dragEnd);
+      document.addEventListener('touchmove', drag, { passive: false });
+    }
+
+    let resizeState = null;
+
+    function initializeResizeHandles() {
+      document.querySelectorAll('.draggable').forEach(wrapper => {
+        ['nw','ne','sw','se'].forEach(pos => {
+          if (!wrapper.querySelector(`.resize-handle.${pos}`)) {
+            const handle = document.createElement('div');
+            handle.className = `resize-handle ${pos}`;
+            handle.dataset.resize = pos;
+            wrapper.appendChild(handle);
+          }
+        });
+      });
+    }
+
+    function selectElementForEditing(el) {
+      if (!el) return;
+      document.querySelectorAll('.draggable.selected-for-resize').forEach(x => x.classList.remove('selected-for-resize'));
+      initializeResizeHandles();
+      el.classList.add('selected-for-resize');
+      window.selectedResizeElement = el;
+    }
+
+    /* Wrap Text / MS Word Layering Controls */
+    function setWrapText(type) {
+      const el = window.selectedResizeElement;
+      if (!el) {
+        alert("Please select a photo or text box first.");
+        return;
+      }
+      el.classList.remove('wrap-behind', 'wrap-infront');
+      if (type === 'behind') {
+        el.classList.add('wrap-behind');
+        showToast("Element wrapped: Behind Text");
+      } else if (type === 'infront') {
+        el.classList.add('wrap-infront');
+        showToast("Element wrapped: In Front of Text");
+      }
+    }
+
+    function changeLayer(direction) {
+      const el = window.selectedResizeElement;
+      if (!el) return;
+      let currentZ = parseInt(window.getComputedStyle(el).zIndex) || 5;
+      if (direction === 'forward') {
+        el.style.zIndex = currentZ + 1;
+      } else if (direction === 'backward') {
+        el.style.zIndex = Math.max(1, currentZ - 1);
+      }
+    }
+
+    /* Corner Drag Resizing Engine */
+    function resizeStart(e) {
+      const handle = e.target.closest('.resize-handle');
+      if (!handle) return;
+      const wrapper = handle.closest('.draggable');
+      if (!wrapper) return;
+      e.preventDefault(); e.stopPropagation();
+      selectElementForEditing(wrapper);
+      const point = e.type.includes('touch') ? e.touches[0] : e;
+      const rect = wrapper.getBoundingClientRect();
+      const parent = wrapper.offsetParent;
+      const parentRect = parent.getBoundingClientRect();
+      const rotation = wrapper.dataset.rotation || 0;
+      wrapper.style.transform = `rotate(${rotation}deg)`;
+      wrapper.style.left = `${rect.left - parentRect.left}px`;
+      wrapper.style.top = `${rect.top - parentRect.top}px`;
+      wrapper.style.bottom = 'auto';
+      resizeState = { wrapper, handle: handle.dataset.resize, startX: point.clientX, startY: point.clientY, startW: rect.width, startH: rect.height, startLeft: rect.left - parentRect.left, startTop: rect.top - parentRect.top };
+    }
+
+    function resizeMove(e) {
+      if (!resizeState) return;
+      e.preventDefault();
+      const point = e.type.includes('touch') ? e.touches[0] : e;
+      const r = resizeState;
+      let w = r.startW, h = r.startH, left = r.startLeft, top = r.startTop;
+      const dx = point.clientX - r.startX, dy = point.clientY - r.startY;
+      
+      if (r.handle.includes('e')) w = r.startW + dx;
+      if (r.handle.includes('s')) h = r.startH + dy;
+      if (r.handle.includes('w')) { w = r.startW - dx; left = r.startLeft + dx; }
+      if (r.handle.includes('n')) { h = r.startH - dy; top = r.startTop + dy; }
+      
+      const parent = r.wrapper.offsetParent;
+      w = Math.max(35, Math.min(w, parent.clientWidth));
+      h = Math.max(25, Math.min(h, parent.clientHeight));
+      left = Math.max(0, Math.min(left, parent.clientWidth - w));
+      top = Math.max(0, Math.min(top, parent.clientHeight - h));
+      
+      r.wrapper.style.width = `${w}px`;
+      r.wrapper.style.height = `${h}px`;
+      r.wrapper.style.left = `${left}px`;
+      r.wrapper.style.top = `${top}px`;
+      r.wrapper.style.bottom = 'auto';
+
+      if (r.wrapper.querySelector('#previewGodparentsList') || r.wrapper.querySelector('.card-godparents-box')) renderGodparentsOnCard();
+    }
+
+    function resizeEnd() { resizeState = null; }
+
+    function dragStart(e) {
+      const target = e.target.closest('.draggable');
+      if (!target || e.target.classList.contains('control-btn') || e.target.classList.contains('resize-handle')) return;
+
+      selectElementForEditing(target);
+      activeElement = target;
+      activeElement.classList.add('active');
+
+      const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+      const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+
+      const transform = window.getComputedStyle(activeElement).transform;
+      let existingX = 0, existingY = 0;
+
+      if (transform !== 'none') {
+        const values = transform.split('(')[1].split(')')[0].split(',');
+        existingX = parseFloat(values[4]);
+        existingY = parseFloat(values[5]);
+      }
+
+      initialX = clientX - existingX;
+      initialY = clientY - existingY;
+
+      document.getElementById('guideV').style.display = 'block';
+      document.getElementById('guideH').style.display = 'block';
+    }
+
+    function drag(e) {
+      if (!activeElement) return;
+      e.preventDefault();
+
+      const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+      const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+
+      let currentX = clientX - initialX;
+      let currentY = clientY - initialY;
+
+      const cardOverlay = document.getElementById('cardOverlay');
+      const containerRect = cardOverlay.getBoundingClientRect();
+      const elemRect = activeElement.getBoundingClientRect();
+
+      const elemCenterX = elemRect.left + elemRect.width / 2;
+      const containerCenterX = containerRect.left + containerRect.width / 2;
+      if (Math.abs(elemCenterX - containerCenterX) < SNAP_THRESHOLD) {
+        currentX += (containerCenterX - elemCenterX);
+      }
+
+      const elemCenterY = elemRect.top + elemRect.height / 2;
+      const containerCenterY = containerRect.top + containerRect.height / 2;
+      if (Math.abs(elemCenterY - containerCenterY) < SNAP_THRESHOLD) {
+        currentY += (containerCenterY - elemCenterY);
+      }
+
+      const rotation = activeElement.dataset.rotation || 0;
+      activeElement.style.transform = `translate3d(${currentX}px, ${currentY}px, 0) rotate(${rotation}deg)`;
+    }
+
+    function dragEnd() {
+      if (activeElement) {
+        activeElement.classList.remove('active');
+        activeElement = null;
+      }
+      document.getElementById('guideV').style.display = 'none';
+      document.getElementById('guideH').style.display = 'none';
+    }
+
+    function alignSelectedElement(mode) {
+      const el = window.selectedResizeElement;
+      if (!el) return;
+      const parent = el.offsetParent;
+      if (!parent) return;
+      const maxW = parent.clientWidth, maxH = parent.clientHeight;
+      const w = el.offsetWidth, h = el.offsetHeight;
+      if (mode === 'left') el.style.left = '0px';
+      if (mode === 'centerX' || mode === 'center') el.style.left = `${Math.max(0,(maxW-w)/2)}px`;
+      if (mode === 'right') el.style.left = `${Math.max(0,maxW-w)}px`;
+      if (mode === 'top') el.style.top = '0px';
+      if (mode === 'centerY' || mode === 'center') el.style.top = `${Math.max(0,(maxH-h)/2)}px`;
+      if (mode === 'bottom') el.style.top = `${Math.max(0,maxH-h)}px`;
+      el.style.bottom = 'auto';
+    }
+
+    function autoAlignAllElements() {
+      const parent = window.activeCardPage === 'back' ? document.getElementById('backCardContent') : document.getElementById('frontCardContent');
+      if (!parent) return;
+      const els = [...parent.querySelectorAll(':scope > .draggable')];
+      els.forEach(el => {
+        el.style.left = `${Math.max(0,(parent.clientWidth-el.offsetWidth)/2)}px`;
+        el.style.bottom = 'auto';
+      });
+      if (!els.length) return;
+      const gap = 8;
+      const total = els.reduce((sum,el)=>sum+el.offsetHeight,0) + gap*(els.length-1);
+      let y = Math.max(0,(parent.clientHeight-total)/2);
+      els.forEach(el => { el.style.top = `${y}px`; y += el.offsetHeight + gap; });
+      selectElementForEditing(els[0]);
+    }
+
+    function rotateElement(btn) {
+      const wrapper = btn.closest('.draggable');
+      let currentRotation = parseInt(wrapper.dataset.rotation || 0);
+      currentRotation = (currentRotation + 15) % 360;
+      wrapper.dataset.rotation = currentRotation;
+
+      const transform = window.getComputedStyle(wrapper).transform;
+      let x = 0, y = 0;
+      if (transform !== 'none') {
+        const values = transform.split('(')[1].split(')')[0].split(',');
+        x = parseFloat(values[4]);
+        y = parseFloat(values[5]);
+      }
+
+      wrapper.style.transform = `translate3d(${x}px, ${y}px, 0) rotate(${currentRotation}deg)`;
+    }
+
+    function deleteElement(btn) {
+      btn.closest('.draggable').remove();
+    }
+
+    function addFreelyDraggableText() {
+      const parent = window.activeCardPage === 'front' ? document.getElementById('frontCardContent') : document.getElementById('backCardContent');
+      const wrapper = createDraggableWrapper();
+      wrapper.style.top = '100px';
+      wrapper.style.left = '20px';
+      wrapper.style.width = '180px';
+      wrapper.style.height = '40px';
+
+      const p = document.createElement('div');
+      p.contentEditable = "true";
+      p.style.fontSize = "0.9rem";
+      p.style.fontWeight = "600";
+      p.style.width = "100%";
+      p.style.height = "100%";
+      p.innerText = "Click to edit text";
+
+      wrapper.appendChild(p);
+      parent.appendChild(wrapper);
+      initializeResizeHandles();
+      selectElementForEditing(wrapper);
+    }
+
+    function handleDraggablePhotoUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const parent = window.activeCardPage === 'front' ? document.getElementById('frontCardContent') : document.getElementById('backCardContent');
+        const wrapper = createDraggableWrapper();
+        wrapper.style.top = '60px';
+        wrapper.style.left = '30px';
+        wrapper.style.width = '140px';
+        wrapper.style.height = '140px';
+
+        const img = document.createElement('img');
+        img.src = event.target.result;
+
+        wrapper.appendChild(img);
+        parent.appendChild(wrapper);
+        initializeResizeHandles();
+        selectElementForEditing(wrapper);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function createDraggableWrapper() {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'draggable';
+
+      const controls = document.createElement('div');
+      controls.className = 'draggable-controls';
+
+      const rotateBtn = document.createElement('button');
+      rotateBtn.type = 'button';
+      rotateBtn.className = 'control-btn btn-rotate';
+      rotateBtn.innerText = '↻';
+      rotateBtn.onclick = function() { rotateElement(rotateBtn); };
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.type = 'button';
+      deleteBtn.className = 'control-btn btn-delete';
+      deleteBtn.innerText = '×';
+      deleteBtn.onclick = function() { deleteElement(deleteBtn); };
+
+      controls.appendChild(rotateBtn);
+      controls.appendChild(deleteBtn);
+      wrapper.appendChild(controls);
+
+      ['nw','ne','sw','se'].forEach(pos => {
+        const handle = document.createElement('div');
+        handle.className = `resize-handle ${pos}`;
+        handle.dataset.resize = pos;
+        wrapper.appendChild(handle);
+      });
+
+      return wrapper;
+    }
+
+    function downloadCardImage(format = 'png') {
+      const cardElement = document.getElementById('invitationCardPreview');
+
+      if (window.showToast) {
+        window.showToast(`Generating ${format.toUpperCase()} image...`);
+      }
+
+      const editControls = cardElement.querySelectorAll('.draggable-controls');
+      const handles = cardElement.querySelectorAll('.resize-handle');
+      editControls.forEach(ctrl => ctrl.style.visibility = 'hidden');
+      handles.forEach(h => h.style.visibility = 'hidden');
+
+      html2canvas(cardElement, {
+        scale: 3,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: null
+      }).then(canvas => {
+        editControls.forEach(ctrl => ctrl.style.visibility = '');
+        handles.forEach(h => h.style.visibility = '');
+
+        const pageLabel = window.activeCardPage === 'front' ? 'Front' : 'Back';
+        const fileName = `Invitation_${pageLabel}_Page.${format}`;
+        
+        const link = document.createElement('a');
+        link.download = fileName;
+        link.href = canvas.toDataURL(`image/${format}`, format === 'jpeg' ? 0.95 : 1.0);
+        link.click();
+
+        if (window.showToast) {
+          window.showToast(`Downloaded ${fileName}!`);
+        }
+      }).catch(err => {
+        editControls.forEach(ctrl => ctrl.style.visibility = '');
+        handles.forEach(h => h.style.visibility = '');
+        console.error("Image generation error:", err);
+        alert("Failed to capture image. Please try again.");
+      });
+    }
 
     function setupEventListeners() {
       document.getElementById('guestCategory').addEventListener('change', (e) => {
@@ -649,6 +1848,280 @@ const firebaseConfig = {
       });
     }
 
+    function toggleStudioPanel() {
+      const studioCard = document.getElementById('invitationStudioCard');
+      studioCard.style.display = studioCard.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function swapDimensions() {
+      const widthEl = document.getElementById('cardWidthCm');
+      const heightEl = document.getElementById('cardHeightCm');
+      const temp = widthEl.value;
+      widthEl.value = heightEl.value;
+      heightEl.value = temp;
+
+      const orientationSelect = document.getElementById('cardOrientation');
+      if (parseFloat(widthEl.value) > parseFloat(heightEl.value)) {
+        orientationSelect.value = 'landscape';
+      } else {
+        orientationSelect.value = 'portrait';
+      }
+
+      updateCardDimensions();
+    }
+
+    function changeOrientation(orient) {
+      const widthEl = document.getElementById('cardWidthCm');
+      const heightEl = document.getElementById('cardHeightCm');
+      let w = parseFloat(widthEl.value) || 12.7;
+      let h = parseFloat(heightEl.value) || 17.8;
+
+      if (orient === 'landscape' && w < h) {
+        widthEl.value = h;
+        heightEl.value = w;
+      } else if (orient === 'portrait' && w > h) {
+        widthEl.value = h;
+        heightEl.value = w;
+      }
+      updateCardDimensions();
+    }
+
+    function updateCardDimensions(shouldSave = true) {
+      const widthCm = parseFloat(document.getElementById('cardWidthCm').value) || 12.7;
+      const heightCm = parseFloat(document.getElementById('cardHeightCm').value) || 17.8;
+      
+      const pxPerCm = 28.35;
+      let computedWidth = widthCm * pxPerCm;
+      let computedHeight = heightCm * pxPerCm;
+
+      const maxWidth = 520;
+      if (computedWidth > maxWidth) {
+        const scale = maxWidth / computedWidth;
+        computedWidth = maxWidth;
+        computedHeight = computedHeight * scale;
+      }
+
+      const cardPreview = document.getElementById('invitationCardPreview');
+      cardPreview.style.width = `${computedWidth}px`;
+      cardPreview.style.height = `${computedHeight}px`;
+
+      const orientationSelect = document.getElementById('cardOrientation');
+      if (widthCm > heightCm) {
+        orientationSelect.value = 'landscape';
+      } else if (heightCm > widthCm) {
+        orientationSelect.value = 'portrait';
+      }
+
+      const currentOrient = orientationSelect.value.charAt(0).toUpperCase() + orientationSelect.value.slice(1);
+      const dimLabel = `Visualizer Size: ${widthCm} cm × ${heightCm} cm (${currentOrient})`;
+      document.getElementById('liveDimensionLabel').textContent = dimLabel;
+      document.getElementById('modalDimensionDisplay').textContent = `${widthCm} cm × ${heightCm} cm (${currentOrient})`;
+
+      renderGodparentsOnCard();
+
+      if (shouldSave && window.autoSaveCardSettings) {
+        window.autoSaveCardSettings();
+      }
+    }
+
+    function setCustomCm(w, h) {
+      const orientationSelect = document.getElementById('cardOrientation').value;
+      if (orientationSelect === 'landscape') {
+        document.getElementById('cardWidthCm').value = Math.max(w, h);
+        document.getElementById('cardHeightCm').value = Math.min(w, h);
+      } else {
+        document.getElementById('cardWidthCm').value = Math.min(w, h);
+        document.getElementById('cardHeightCm').value = Math.max(w, h);
+      }
+      updateCardDimensions();
+    }
+
+    function switchCardPage(page) {
+      window.activeCardPage = page;
+      const tabFront = document.getElementById('tabFrontPage');
+      const tabBack = document.getElementById('tabBackPage');
+      const editorFront = document.getElementById('pageEditorFront');
+      const editorBack = document.getElementById('pageEditorBack');
+      const frontContent = document.getElementById('frontCardContent');
+      const backContent = document.getElementById('backCardContent');
+      const indicator = document.getElementById('previewPageIndicator');
+      const cardPreview = document.getElementById('invitationCardPreview');
+
+      if (page === 'front') {
+        tabFront.classList.add('active');
+        tabBack.classList.remove('active');
+        editorFront.style.display = 'block';
+        editorBack.style.display = 'none';
+        frontContent.style.display = 'block';
+        backContent.style.display = 'none';
+        indicator.textContent = 'PREVIEWING: PAGE 1 (FRONT COVER)';
+        cardPreview.style.backgroundImage = window.frontBgImage ? `url('${window.frontBgImage}')` : 'none';
+      } else {
+        tabBack.classList.add('active');
+        tabFront.classList.remove('active');
+        editorFront.style.display = 'none';
+        editorBack.style.display = 'block';
+        frontContent.style.display = 'none';
+        backContent.style.display = 'block';
+        indicator.textContent = 'PREVIEWING: PAGE 2 (FINAL GODPARENTS LIST)';
+        cardPreview.style.backgroundImage = window.backBgImage ? `url('${window.backBgImage}')` : 'none';
+
+        if (!window.isDoubleSided) {
+          document.getElementById('enableDoubleSidedToggle').checked = true;
+          toggleDoubleSidedMode(true);
+        }
+        
+        renderGodparentsOnCard();
+      }
+    }
+
+    function toggleDoubleSidedMode(enabled) {
+      window.isDoubleSided = enabled;
+      if (window.autoSaveCardSettings) window.autoSaveCardSettings();
+    }
+
+    function applyPalette(theme, shouldSave = true) {
+      window.activeTheme = theme;
+      const root = document.documentElement;
+      if (theme === 'blush') {
+        root.style.setProperty('--card-bg-color', '#fdf2f8');
+        root.style.setProperty('--card-text-color', '#4c1d95');
+        root.style.setProperty('--card-accent-color', '#c084fc');
+        root.style.setProperty('--card-border-color', '#f472b6');
+      } else if (theme === 'lilac') {
+        root.style.setProperty('--card-bg-color', '#f3e8ff');
+        root.style.setProperty('--card-text-color', '#581c87');
+        root.style.setProperty('--card-accent-color', '#a855f7');
+        root.style.setProperty('--card-border-color', '#ec4899');
+      } else if (theme === 'cotton') {
+        root.style.setProperty('--card-bg-color', '#fce7f3');
+        root.style.setProperty('--card-text-color', '#0369a1');
+        root.style.setProperty('--card-accent-color', '#38bdf8');
+        root.style.setProperty('--card-border-color', '#f472b6');
+      } else if (theme === 'sage') {
+        root.style.setProperty('--card-bg-color', '#f0fdf4');
+        root.style.setProperty('--card-text-color', '#3b0764');
+        root.style.setProperty('--card-accent-color', '#c084fc');
+        root.style.setProperty('--card-border-color', '#86efac');
+      }
+
+      if (shouldSave && window.autoSaveCardSettings) {
+        window.autoSaveCardSettings();
+      }
+    }
+
+    function updateCardTypography() {
+      const font = document.getElementById('fontSelect').value;
+      document.documentElement.style.setProperty('--card-font-family', font);
+      if (window.autoSaveCardSettings) window.autoSaveCardSettings();
+    }
+
+    function handleImageUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          if (window.activeCardPage === 'front') {
+            window.frontBgImage = e.target.result;
+          } else {
+            window.backBgImage = e.target.result;
+          }
+          document.getElementById('invitationCardPreview').style.backgroundImage = `url('${e.target.result}')`;
+          if (window.autoSaveCardSettings) window.autoSaveCardSettings();
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function updateOverlayOpacity(val) {
+      document.getElementById('cardOverlay').style.backgroundColor = `rgba(255, 255, 255, ${val})`;
+      if (window.autoSaveCardSettings) window.autoSaveCardSettings();
+    }
+
+    function updateCardText(shouldSave = true) {
+      document.getElementById('previewTitle').textContent = document.getElementById('cardTitleInput').value;
+      document.getElementById('previewVerse').textContent = document.getElementById('cardVerseInput').value;
+      document.getElementById('previewChild').textContent = document.getElementById('cardChildInput').value;
+      document.getElementById('previewDetails').innerHTML = document.getElementById('cardDetailsInput').value.replace(/\n/g, '<br>');
+
+      document.getElementById('previewGodparentHeading').textContent = document.getElementById('cardGodparentHeadingInput').value;
+      document.getElementById('previewGodparentSubheading').textContent = document.getElementById('cardGodparentSubheadingInput').value;
+
+      if (shouldSave && window.autoSaveCardSettings) {
+        window.autoSaveCardSettings();
+      }
+    }
+
+    function renderGodparentsOnCard() {
+      const container = document.getElementById('previewGodparentsList');
+      if (!container) return;
+      container.innerHTML = '';
+
+      const finalGodparents = (window.guests || [])
+        .filter(g => g.category === 'godparent' && g.onFinalList);
+
+      if (!finalGodparents.length) {
+        container.style.display = 'flex';
+        container.style.alignItems = 'center';
+        container.style.justifyContent = 'center';
+        container.innerHTML = '<span style="font-size: 0.8rem; opacity: 0.7; font-style: italic; text-align: center;">No Godparents added to Final List yet.<br>Check "Add to Final List" on a godparent to feature them here.</span>';
+        return;
+      }
+
+      container.style.display = 'grid';
+
+      const count = finalGodparents.length;
+      let columns = 2;
+      if (count > 16 && count <= 36) {
+        columns = 3;
+      } else if (count > 36) {
+        columns = 4;
+      }
+      container.style.gridTemplateColumns = `repeat(${columns}, minmax(0, 1fr))`;
+
+      finalGodparents.forEach((g, index) => {
+        const item = document.createElement('div');
+        item.className = 'godparent-tag';
+        item.textContent = `${index + 1}. ${g.name || ''}`;
+        item.title = g.name || '';
+        container.appendChild(item);
+      });
+
+      const tags = [...container.querySelectorAll('.godparent-tag')];
+      let fontSize = count <= 10 ? 11 : count <= 20 ? 9.5 : count <= 35 ? 8.2 : 7;
+
+      const applyFontSize = (px) => {
+        tags.forEach(t => {
+          t.style.fontSize = `${px.toFixed(2)}px`;
+          t.style.padding = px < 8 ? '0.08rem 0.2rem' : '0.15rem 0.35rem';
+        });
+      };
+
+      applyFontSize(fontSize);
+
+      let attempts = 0;
+      while (container.scrollHeight > container.clientHeight && fontSize > 4.5 && attempts < 50) {
+        fontSize -= 0.2;
+        applyFontSize(fontSize);
+        attempts++;
+      }
+    }
+
+    function openPrintModal() { document.getElementById('printModal').classList.add('active'); }
+    function openEnvelopeModal() { document.getElementById('envelopeModal').classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+    function triggerEnvelopeOpen() {
+      alert("Envelope unsealed! Revealing the invitation card.");
+    }
+
+    function toggleAlphabeticalSort() {
+      window.isAlphabetical = !window.isAlphabetical;
+      const btn = document.getElementById('sortAlphabeticalBtn');
+      btn.classList.toggle('active', window.isAlphabetical);
+      renderTable();
+    }
+
     function adjustCount(inputId, delta) {
       const input = document.getElementById(inputId);
       let val = parseInt(input.value) || 0;
@@ -688,10 +2161,6 @@ const firebaseConfig = {
       document.getElementById('editModal').classList.add('active');
     }
 
-    function closeModal() {
-      document.getElementById('editModal').classList.remove('active');
-    }
-
     function toggleModalFeeVisibility() {
       const category = document.getElementById('editGuestCategory').value;
       const feeWrapper = document.getElementById('editFeeCheckboxWrapper');
@@ -718,28 +2187,38 @@ const firebaseConfig = {
       guest.isAttending = document.getElementById('editIsAttending').checked;
       guest.feePaid = guest.category === 'godparent' ? document.getElementById('editFeePaid').checked : false;
 
-      closeModal();
+      closeModal('editModal');
       window.saveToInternet(guest);
     }
 
     function renderApp() {
       renderStats();
       renderTable();
+      renderGodparentsOnCard();
     }
 
     function renderStats() {
       const finalGuests = window.guests.filter(g => g.onFinalList);
-      const finalHeadcount = finalGuests.reduce((acc, g) => acc + 1 + g.plusOnes, 0);
+      
+      const finalHeadcount = finalGuests.reduce((acc, g) => {
+        return g.category === 'godparent' ? acc + 1 : acc + 1 + g.plusOnes;
+      }, 0);
+
       const finalGodparents = finalGuests.filter(g => g.category === 'godparent').length;
-      const finalRegular = finalGuests.filter(g => g.category === 'regular').length;
+      const finalRegular = finalGuests
+        .filter(g => g.category === 'regular')
+        .reduce((acc, g) => acc + 1 + g.plusOnes, 0);
 
       document.getElementById('statFinalHeadcount').textContent = finalHeadcount;
       document.getElementById('statFinalBreakdown').textContent = `${finalGodparents} Godparents | ${finalRegular} Guests`;
 
       const attendingGuests = window.guests.filter(g => g.isAttending);
       const attendingHeadcount = attendingGuests.reduce((acc, g) => acc + 1 + g.plusOnes, 0);
+
       const attendingGodparents = attendingGuests.filter(g => g.category === 'godparent').length;
-      const attendingRegular = attendingGuests.filter(g => g.category === 'regular').length;
+      const attendingRegular = attendingGuests
+        .filter(g => g.category === 'regular')
+        .reduce((acc, g) => acc + 1 + g.plusOnes, 0);
 
       document.getElementById('statAttendingHeadcount').textContent = attendingHeadcount;
       document.getElementById('statAttendingBreakdown').textContent = `${attendingGodparents} Godparents | ${attendingRegular} Guests`;
@@ -774,6 +2253,10 @@ const firebaseConfig = {
         if (window.currentFilter === 'unpaid') return g.category === 'godparent' && !g.feePaid;
         return true;
       });
+
+      if (window.isAlphabetical) {
+        filtered.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+      }
 
       const emptyState = document.getElementById('emptyState');
       if (filtered.length === 0) {
