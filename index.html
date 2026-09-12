@@ -751,6 +751,17 @@ function renderStats() {
 
       document.getElementById('statAttendingHeadcount').textContent = attendingHeadcount;
       document.getElementById('statAttendingBreakdown').textContent = `${attendingGodparents} Godparents | ${attendingRegular} Guests`;
+      const attendingGuests = window.guests.filter(g => g.isAttending);
+      const attendingHeadcount = attendingGuests.reduce((acc, g) => acc + 1 + g.plusOnes, 0);
+
+      // Apply the same logic to attending guests breakdown
+      const attendingGodparents = attendingGuests.filter(g => g.category === 'godparent').length;
+      const attendingRegular = attendingGuests
+        .filter(g => g.category === 'regular')
+        .reduce((acc, g) => acc + 1 + g.plusOnes, 0);
+
+      document.getElementById('statAttendingHeadcount').textContent = attendingHeadcount;
+      document.getElementById('statAttendingBreakdown').textContent = `${attendingGodparents} Godparents | ${attendingRegular} Guests`;
       const allGodparents = window.guests.filter(g => g.category === 'godparent');
       const paidGodparents = allGodparents.filter(g => g.feePaid).length;
       const percentage = allGodparents.length > 0 ? Math.round((paidGodparents / allGodparents.length) * 100) : 0;
