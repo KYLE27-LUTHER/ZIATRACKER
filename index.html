@@ -276,6 +276,31 @@
       overflow: hidden;
     }
 
+    /* ALIGNMENT GUIDELINES */
+    .guide-line-v {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 1px;
+      border-left: 1px dashed #ef4444;
+      display: none;
+      z-index: 100;
+      pointer-events: none;
+    }
+
+    .guide-line-h {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 50%;
+      height: 1px;
+      border-top: 1px dashed #ef4444;
+      display: none;
+      z-index: 100;
+      pointer-events: none;
+    }
+
     /* Draggable Elements Styling */
     .draggable {
       position: absolute;
@@ -618,7 +643,6 @@
       box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
     }
 
-    /* Additional Dynamic Tool Controls */
     .studio-element-tools {
       display: flex;
       gap: 0.5rem;
@@ -692,7 +716,7 @@
       <h2 style="font-size: 1.2rem; color: var(--primary); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
         <i class="fa-solid fa-paint-brush"></i> Double-Sided Invitation Card Studio
       </h2>
-      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Design back-to-back invitations, adjust pastels, drag elements freely, upload custom photos, and add textboxes.</p>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Design back-to-back invitations, adjust pastels, drag elements freely with alignment guidelines, upload custom photos, and add textboxes.</p>
 
       <!-- Page Switcher Bar -->
       <div class="page-nav-bar">
@@ -850,6 +874,10 @@
 
           <!-- THE VISUALIZED CARD CANVAS -->
           <div class="invitation-card" id="invitationCardPreview">
+            <!-- Dynamic Alignment Crosshairs -->
+            <div class="guide-line-v" id="guideV"></div>
+            <div class="guide-line-h" id="guideH"></div>
+
             <div class="card-overlay" id="cardOverlay">
               
               <!-- PAGE 1 FRONT COVER -->
@@ -860,8 +888,8 @@
                     <button type="button" class="control-btn btn-rotate" onclick="rotateElement(this)">↻</button>
                     <button type="button" class="control-btn btn-delete" onclick="deleteElement(this)">×</button>
                   </div>
-                  <div class="card-header-title" id="previewTitle">Holy Baptism</div>
-                  <div class="card-subtitle" id="previewVerse">'Every good and perfect gift is from above'</div>
+                  <div class="card-header-title" id="previewTitle">Holy Baptism & Dedication</div>
+                  <div class="card-subtitle" id="previewVerse">'Every good and perfect gift is from above' — James 1:17</div>
                 </div>
 
                 <div class="draggable" style="top: 120px; left: 15px; width: 90%;">
@@ -870,9 +898,9 @@
                     <button type="button" class="control-btn btn-delete" onclick="deleteElement(this)">×</button>
                   </div>
                   <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">We Invite You To Celebrate</div>
-                  <div class="card-child-name" id="previewChild">Baby Liam</div>
+                  <div class="card-child-name" id="previewChild">Baby Liam Cristobal</div>
                   <div class="card-details" id="previewDetails">
-                    Saturday, November 14, 2026<br>St. Augustine Church
+                    Saturday, November 14, 2026 | 10:00 AM<br>St. Augustine Church, Paoay, Ilocos Norte
                   </div>
                 </div>
 
@@ -894,8 +922,8 @@
                     <button type="button" class="control-btn btn-rotate" onclick="rotateElement(this)">↻</button>
                     <button type="button" class="control-btn btn-delete" onclick="deleteElement(this)">×</button>
                   </div>
-                  <div class="card-header-title" id="previewBackTitle">Event Details</div>
-                  <div class="card-subtitle" id="previewBackSubtitle">Reception & Program</div>
+                  <div class="card-header-title" id="previewBackTitle">Event Program & Reception</div>
+                  <div class="card-subtitle" id="previewBackSubtitle">Reception follows immediately at Grand Ballroom. Attire: Pastel Formal.</div>
                 </div>
 
                 <div class="draggable" style="top: 120px; left: 15px; width: 90%;">
@@ -907,7 +935,7 @@
                   <div class="card-godparents-box">
                     <div class="card-godparents-title" id="previewGodparentHeading">Mga Ninong at Ninang</div>
                     <div class="godparents-list-preview" id="previewGodparentsList">
-                      <!-- Dynamically synced Godparents -->
+                      <!-- Dynamically synced Final List Godparents -->
                     </div>
                   </div>
                 </div>
@@ -1194,6 +1222,7 @@
   <script>
     let activeElement = null;
     let initialX, initialY;
+    const SNAP_THRESHOLD = 8; // Snap distance tolerance in pixels
 
     document.addEventListener('DOMContentLoaded', () => {
       setupEventListeners();
@@ -1202,7 +1231,7 @@
       setupDraggableHandlers();
     });
 
-    /* Universal Free Drag & Drop Event Listeners */
+    /* Universal Free Drag & Drop Event Listeners with Alignment Guidelines & Magnetic Snap */
     function setupDraggableHandlers() {
       document.addEventListener('mousedown', dragStart);
       document.addEventListener('mouseup', dragEnd);
@@ -1218,6 +1247,7 @@
       if (!target || e.target.classList.contains('control-btn')) return;
 
       activeElement = target;
+      activeElement.classList.add('active');
 
       const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
       const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
@@ -1233,24 +1263,50 @@
 
       initialX = clientX - existingX;
       initialY = clientY - existingY;
+
+      document.getElementById('guideV').style.display = 'block';
+      document.getElementById('guideH').style.display = 'block';
     }
 
     function drag(e) {
-      if (activeElement) {
-        e.preventDefault();
-        const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
-        const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+      if (!activeElement) return;
+      e.preventDefault();
 
-        const currentX = clientX - initialX;
-        const currentY = clientY - initialY;
+      const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+      const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
 
-        const rotation = activeElement.dataset.rotation || 0;
-        activeElement.style.transform = `translate3d(${currentX}px, ${currentY}px, 0) rotate(${rotation}deg)`;
+      let currentX = clientX - initialX;
+      let currentY = clientY - initialY;
+
+      const cardOverlay = document.getElementById('cardOverlay');
+      const containerRect = cardOverlay.getBoundingClientRect();
+      const elemRect = activeElement.getBoundingClientRect();
+
+      // Horizontal Center Snap Alignment
+      const elemCenterX = elemRect.left + elemRect.width / 2;
+      const containerCenterX = containerRect.left + containerRect.width / 2;
+      if (Math.abs(elemCenterX - containerCenterX) < SNAP_THRESHOLD) {
+        currentX += (containerCenterX - elemCenterX);
       }
+
+      // Vertical Center Snap Alignment
+      const elemCenterY = elemRect.top + elemRect.height / 2;
+      const containerCenterY = containerRect.top + containerRect.height / 2;
+      if (Math.abs(elemCenterY - containerCenterY) < SNAP_THRESHOLD) {
+        currentY += (containerCenterY - elemCenterY);
+      }
+
+      const rotation = activeElement.dataset.rotation || 0;
+      activeElement.style.transform = `translate3d(${currentX}px, ${currentY}px, 0) rotate(${rotation}deg)`;
     }
 
     function dragEnd() {
-      activeElement = null;
+      if (activeElement) {
+        activeElement.classList.remove('active');
+        activeElement = null;
+      }
+      document.getElementById('guideV').style.display = 'none';
+      document.getElementById('guideH').style.display = 'none';
     }
 
     function rotateElement(btn) {
@@ -1274,7 +1330,6 @@
       btn.closest('.draggable').remove();
     }
 
-    /* Add Custom Textbox */
     function addFreelyDraggableText() {
       const parent = window.activeCardPage === 'front' ? document.getElementById('frontCardContent') : document.getElementById('backCardContent');
       const wrapper = createDraggableWrapper();
@@ -1291,7 +1346,6 @@
       parent.appendChild(wrapper);
     }
 
-    /* Add Custom Photo */
     function handleDraggablePhotoUpload(e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -1338,7 +1392,6 @@
       return wrapper;
     }
 
-    /* DOWNLOAD CARD AS PNG / JPG FUNCTION */
     function downloadCardImage(format = 'png') {
       const cardElement = document.getElementById('invitationCardPreview');
 
@@ -1346,17 +1399,15 @@
         window.showToast(`Generating ${format.toUpperCase()} image...`);
       }
 
-      // Hide editing controls temporarily during capture
       const editControls = cardElement.querySelectorAll('.draggable-controls');
       editControls.forEach(ctrl => ctrl.style.visibility = 'hidden');
 
       html2canvas(cardElement, {
-        scale: 3, // High resolution rendering (3x pixel density)
+        scale: 3,
         useCORS: true,
         allowTaint: true,
         backgroundColor: null
       }).then(canvas => {
-        // Restore editing controls
         editControls.forEach(ctrl => ctrl.style.visibility = '');
 
         const pageLabel = window.activeCardPage === 'front' ? 'Front' : 'Back';
@@ -1438,7 +1489,6 @@
       studioCard.style.display = studioCard.style.display === 'none' ? 'block' : 'none';
     }
 
-    /* CUSTOM DYNAMIC CENTIMETER VISUALIZER FUNCTION */
     function updateCardDimensions() {
       const widthCm = parseFloat(document.getElementById('cardWidthCm').value) || 12.7;
       const heightCm = parseFloat(document.getElementById('cardHeightCm').value) || 17.8;
@@ -1571,18 +1621,21 @@
       document.getElementById('previewGodparentHeading').textContent = document.getElementById('cardGodparentHeadingInput').value;
     }
 
+    /* AUTOMATIC INTEGRATION OF FINAL LIST GODPARENTS */
     function renderGodparentsOnCard() {
       const container = document.getElementById('previewGodparentsList');
       if (!container) return;
       container.innerHTML = '';
       
-      const godparents = (window.guests || []).filter(g => g.category === 'godparent');
-      if (godparents.length === 0) {
-        container.innerHTML = '<span class="godparent-tag">Sample Ninong 1</span><span class="godparent-tag">Sample Ninang 1</span><span class="godparent-tag">Sample Ninong 2</span><span class="godparent-tag">Sample Ninang 2</span>';
+      // Filter ONLY Godparents marked as on the Final List
+      const finalGodparents = (window.guests || []).filter(g => g.category === 'godparent' && g.onFinalList);
+      
+      if (finalGodparents.length === 0) {
+        container.innerHTML = '<span class="godparent-tag" style="opacity: 0.6; font-style: italic;">No Godparents added to Final List yet</span>';
         return;
       }
 
-      godparents.forEach(g => {
+      finalGodparents.forEach(g => {
         const span = document.createElement('span');
         span.className = 'godparent-tag';
         span.textContent = g.name;
