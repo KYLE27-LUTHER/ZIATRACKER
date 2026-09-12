@@ -206,7 +206,7 @@
     .page-nav-bar {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-space: space-between;
       background: #f1f5f9;
       padding: 0.5rem 0.75rem;
       border-radius: 8px;
@@ -271,7 +271,7 @@
       inset: 8px;
       background: var(--card-overlay-bg);
       border-radius: 6px;
-      padding: 1rem;
+      padding: 0.85rem;
       border: 1px solid var(--card-accent-color);
       overflow: hidden;
     }
@@ -311,7 +311,33 @@
       border: 1px dashed transparent;
       border-radius: 4px;
       transition: border-color 0.2s;
+      box-sizing: border-box;
+      min-width: 30px;
+      min-height: 24px;
     }
+
+    .draggable.selected-for-resize {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 1px rgba(79,70,229,.15);
+    }
+
+    .resize-handle {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: white;
+      border: 2px solid var(--primary);
+      border-radius: 2px;
+      z-index: 30;
+      display: none;
+      box-sizing: border-box;
+    }
+    .draggable:hover .resize-handle,
+    .draggable.selected-for-resize .resize-handle { display: block; }
+    .resize-handle.nw { left: -6px; top: -6px; cursor: nwse-resize; }
+    .resize-handle.ne { right: -6px; top: -6px; cursor: nesw-resize; }
+    .resize-handle.sw { left: -6px; bottom: -6px; cursor: nesw-resize; }
+    .resize-handle.se { right: -6px; bottom: -6px; cursor: nwse-resize; }
 
     .draggable:hover, .draggable.active {
       border-color: var(--primary);
@@ -355,59 +381,77 @@
     .btn-delete { background: var(--danger); }
     .btn-rotate { background: var(--primary); }
 
-    /* CONTENT SIZE & ALIGNMENT TOOLBAR */
-    .element-editor {
-      background: #f8fafc;
-      border: 1px solid var(--border-color);
-      padding: 0.85rem;
-      border-radius: 8px;
-    }
-    .element-editor-title {
-      font-size: 0.85rem; font-weight: 700; color: var(--primary);
-      display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.55rem;
-    }
-    .element-editor-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;
-    }
-    .element-editor .tool-row { display:flex; gap:0.35rem; flex-wrap:wrap; margin-top:0.55rem; }
-    .element-editor button {
-      border:1px solid var(--border-color); background:white; border-radius:6px;
-      padding:0.4rem 0.55rem; cursor:pointer; font-size:0.75rem; font-weight:600;
-    }
-    .element-editor button:hover { border-color: var(--primary); color: var(--primary); }
-    .element-editor input[type=number] { padding:0.45rem 0.55rem; }
-    .draggable.selected-for-edit { outline: 2px solid var(--primary); outline-offset: 1px; }
-
     .card-header-title { font-size: 1.3rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
     .card-subtitle { font-size: 0.8rem; font-style: italic; margin-top: 0.2rem; }
     .card-child-name { font-size: 1.8rem; font-weight: bold; margin: 0.4rem 0; color: var(--card-text-color); }
     .card-details { font-size: 0.75rem; line-height: 1.4; }
     
+    /* Page 2: Dedicated Final Godparents Container */
     .card-godparents-box {
-      border-top: 1px dashed var(--card-accent-color);
-      padding-top: 0.5rem;
-      font-size: 0.75rem;
       width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      box-sizing: border-box;
+      overflow: hidden;
     }
 
-    .card-godparents-title { font-weight: bold; margin-bottom: 0.3rem; font-size: 0.85rem; }
+    .card-godparents-header {
+      text-align: center;
+      margin-bottom: 0.5rem;
+      border-bottom: 1.5px solid var(--card-accent-color);
+      padding-bottom: 0.35rem;
+    }
 
+    .card-godparents-title {
+      font-weight: 700;
+      font-size: 1.1rem;
+      letter-spacing: 0.5px;
+      color: var(--card-text-color);
+      text-transform: uppercase;
+    }
+
+    .card-godparents-sub {
+      font-size: 0.68rem;
+      font-style: italic;
+      color: var(--text-muted);
+      margin-top: 0.1rem;
+    }
+
+    /* Dynamic, High-Readability Grid for Final Godparents */
     .godparents-list-preview {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-auto-rows: minmax(0, auto);
       gap: 0.25rem;
-      max-height: 250px;
-      overflow-y: auto;
+      flex: 1 1 auto;
+      min-height: 0;
+      width: 100%;
+      box-sizing: border-box;
+      align-content: start;
+      justify-content: center;
+      overflow: hidden;
     }
 
     .godparent-tag {
-      background: rgba(0,0,0,0.05);
-      padding: 0.2rem 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 0.15rem 0.35rem;
+      background: rgba(255, 255, 255, 0.6);
       border-radius: 4px;
-      font-size: 0.72rem;
+      font-size: 0.75rem;
       font-weight: 600;
-      transition: font-size 0.2s ease, padding 0.2s ease;
+      line-height: 1.15;
+      text-align: left;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      white-space: normal;
+      color: var(--card-text-color);
+      box-sizing: border-box;
+
+      /* Multi-column masonry layout fallback */
+      break-inside: avoid;
     }
 
     .envelope-box {
@@ -691,6 +735,14 @@
     .studio-element-tools button:hover, .studio-element-tools label:hover {
       background: #f1f5f9;
     }
+
+    .element-editor {
+      background: #f8fafc; border: 1px solid var(--border-color); padding: .85rem; border-radius: 8px;
+    }
+    .element-editor-title { font-size:.85rem; font-weight:700; color:var(--primary); margin-bottom:.45rem; }
+    .element-editor .tool-row { display:grid; grid-template-columns:repeat(4,1fr); gap:.35rem; }
+    .element-editor button { padding:.4rem .3rem; border:1px solid var(--border-color); background:white; border-radius:6px; cursor:pointer; font-size:.72rem; font-weight:600; }
+    .element-editor button:hover { background:#eef2ff; }
   </style>
 </head>
 <body>
@@ -749,7 +801,7 @@
             <i class="fa-solid fa-file"></i> Page 1 (Front Cover)
           </button>
           <button type="button" class="btn-page-tab" id="tabBackPage" onclick="switchCardPage('back')">
-            <i class="fa-solid fa-file-invoice"></i> Page 2 (Back Details & Godparents)
+            <i class="fa-solid fa-crown"></i> Page 2 (Final Godparents List)
           </button>
         </div>
         <div>
@@ -776,47 +828,28 @@
             </div>
           </div>
 
-          <!-- CONTENT SIZE & ALIGNMENT CONTROLS -->
-          <div class="element-editor">
-            <div class="element-editor-title"><i class="fa-solid fa-sliders"></i> Selected Content Size & Alignment</div>
-            <div id="selectedElementHint" style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.5rem;">Select any text, photo, or content block on the card.</div>
-            <div class="element-editor-grid">
-              <div class="form-group">
-                <label style="font-size:0.75rem;">Width (px)</label>
-                <input type="number" id="elementWidthInput" min="20" max="2000" step="1" oninput="resizeSelectedElement()" disabled>
-              </div>
-              <div class="form-group">
-                <label style="font-size:0.75rem;">Height (px)</label>
-                <input type="number" id="elementHeightInput" min="20" max="2000" step="1" oninput="resizeSelectedElement()" disabled>
-              </div>
-              <div class="form-group">
-                <label style="font-size:0.75rem;">Text Size (px)</label>
-                <input type="number" id="elementFontSizeInput" min="6" max="200" step="1" oninput="resizeSelectedText()" disabled>
-              </div>
-              <div class="form-group">
-                <label style="font-size:0.75rem;">Spacing (px)</label>
-                <input type="number" id="elementLetterSpacingInput" min="-5" max="30" step="0.5" oninput="updateSelectedTextStyle()" disabled>
-              </div>
-            </div>
-            <div class="tool-row">
-              <button type="button" onclick="alignSelectedElement('left')"><i class="fa-solid fa-align-left"></i> Left</button>
-              <button type="button" onclick="alignSelectedElement('centerX')"><i class="fa-solid fa-align-center"></i> Center H</button>
-              <button type="button" onclick="alignSelectedElement('right')"><i class="fa-solid fa-align-right"></i> Right</button>
-              <button type="button" onclick="alignSelectedElement('top')"><i class="fa-solid fa-arrow-up"></i> Top</button>
-              <button type="button" onclick="alignSelectedElement('centerY')"><i class="fa-solid fa-arrows-up-down"></i> Center V</button>
-              <button type="button" onclick="alignSelectedElement('bottom')"><i class="fa-solid fa-arrow-down"></i> Bottom</button>
-              <button type="button" onclick="alignSelectedElement('center')"><i class="fa-solid fa-crosshairs"></i> Center</button>
-            </div>
-            <div class="tool-row">
-              <button type="button" onclick="autoAlignAllElements()" style="flex:1;background:#eef2ff;color:var(--primary);border-color:#c7d2fe;"><i class="fa-solid fa-wand-magic-sparkles"></i> Auto Align All Contents</button>
-            </div>
-          </div>
-
-          <!-- CUSTOM CENTIMETER SIZE VISUALIZER CONTROL -->
+          <!-- CUSTOM CENTIMETER SIZE & ORIENTATION CONTROL -->
           <div style="background: #f8fafc; border: 1px solid var(--border-color); padding: 0.85rem; border-radius: 8px;">
             <label style="font-size: 0.85rem; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.5rem;">
-              <i class="fa-solid fa-ruler-combined"></i> Card Dimensions (Centimeters)
+              <i class="fa-solid fa-ruler-combined"></i> Card Layout & Dimensions (Centimeters)
             </label>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 0.5rem;">
+              <div class="form-group">
+                <label style="font-size: 0.75rem;">Orientation</label>
+                <select id="cardOrientation" onchange="changeOrientation(this.value)">
+                  <option value="portrait">Portrait (Vertical)</option>
+                  <option value="landscape">Landscape (Horizontal)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label style="font-size: 0.75rem;">Swap Axes</label>
+                <button type="button" class="preset-btn" style="padding: 0.6rem 0.5rem; height: 38px;" onclick="swapDimensions()">
+                  <i class="fa-solid fa-rotate"></i> Swap W & H
+                </button>
+              </div>
+            </div>
+
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 0.5rem;">
               <div class="form-group">
                 <label style="font-size: 0.75rem;">Width (cm)</label>
@@ -833,6 +866,21 @@
               <button type="button" class="preset-btn" style="padding: 0.3rem 0.5rem; flex: 1;" onclick="setCustomCm(10.2, 15.2)">4x6 in (10.2×15.2cm)</button>
               <button type="button" class="preset-btn" style="padding: 0.3rem 0.5rem; flex: 1;" onclick="setCustomCm(10, 10)">Square (10×10cm)</button>
               <button type="button" class="preset-btn" style="padding: 0.3rem 0.5rem; flex: 1;" onclick="setCustomCm(14.8, 21.0)">A5 (14.8×21cm)</button>
+            </div>
+          </div>
+
+          <div class="element-editor" id="elementEditorPanel">
+            <div class="element-editor-title"><i class="fa-solid fa-expand"></i> Resize & Align Selected Content</div>
+            <div style="font-size:.75rem;color:var(--text-muted);margin-bottom:.5rem;">Select any content on the card, then drag any corner to resize it freely. No manual size input required.</div>
+            <div class="tool-row">
+              <button type="button" onclick="alignSelectedElement('left')">Left</button>
+              <button type="button" onclick="alignSelectedElement('centerX')">Center H</button>
+              <button type="button" onclick="alignSelectedElement('right')">Right</button>
+              <button type="button" onclick="alignSelectedElement('top')">Top</button>
+              <button type="button" onclick="alignSelectedElement('centerY')">Center V</button>
+              <button type="button" onclick="alignSelectedElement('bottom')">Bottom</button>
+              <button type="button" onclick="alignSelectedElement('center')">Center</button>
+              <button type="button" onclick="autoAlignAllElements()">Auto Align All</button>
             </div>
           </div>
 
@@ -904,18 +952,15 @@
           </div>
 
           <div id="pageEditorBack" style="display: none;">
-            <h4 style="font-size: 0.85rem; color: var(--primary); margin-bottom: 0.5rem;">Page 2 Content (Back Details & Godparents)</h4>
+            <h4 style="font-size: 0.85rem; color: var(--primary); margin-bottom: 0.5rem;">Page 2 — DEDICATED FINAL GODPARENTS PAGE</h4>
+            <div style="font-size:.75rem;color:var(--text-muted);margin-bottom:.6rem;">This side is strictly dedicated to your final godparents list. All names checked under <strong>Final List</strong> appear automatically with responsive readability scaling.</div>
             <div class="form-group" style="margin-bottom: 0.6rem;">
-              <label for="cardBackTitleInput">Back Title</label>
-              <input type="text" id="cardBackTitleInput" value="Event Program & Reception" oninput="updateCardText()">
-            </div>
-            <div class="form-group" style="margin-bottom: 0.6rem;">
-              <label for="cardBackSubtitleInput">Reception & Attire Note</label>
-              <input type="text" id="cardBackSubtitleInput" value="Reception follows immediately at Grand Ballroom. Attire: Pastel Formal." oninput="updateCardText()">
+              <label for="cardGodparentHeadingInput">Main Heading Title</label>
+              <input type="text" id="cardGodparentHeadingInput" value="Mga Ninong at Ninang" oninput="updateCardText()">
             </div>
             <div class="form-group">
-              <label for="cardGodparentHeadingInput">Godparents List Heading</label>
-              <input type="text" id="cardGodparentHeadingInput" value="Mga Ninong at Ninang" oninput="updateCardText()">
+              <label for="cardGodparentSubheadingInput">Subheading / Message</label>
+              <input type="text" id="cardGodparentSubheadingInput" value="Guiding Lights & Christian Guardians" oninput="updateCardText()">
             </div>
           </div>
 
@@ -929,7 +974,7 @@
           </div>
 
           <div style="color: #cbd5e1; font-size: 0.75rem; margin-bottom: 0.75rem; font-weight: 500;" id="liveDimensionLabel">
-            Visualizer Size: 12.7 cm × 17.8 cm
+            Visualizer Size: 12.7 cm × 17.8 cm (Portrait)
           </div>
 
           <!-- THE VISUALIZED CARD CANVAS -->
@@ -974,29 +1019,18 @@
 
               </div>
 
-              <!-- PAGE 2 BACK DETAILS & GODPARENTS -->
+              <!-- PAGE 2 DEDICATED FINAL GODPARENTS PAGE -->
               <div id="backCardContent" style="display: none; width: 100%; height: 100%; position: relative;">
                 
-                <div class="draggable" style="top: 15px; left: 15px; width: 90%;">
-                  <div class="draggable-controls">
-                    <button type="button" class="control-btn btn-rotate" onclick="rotateElement(this)">↻</button>
-                    <button type="button" class="control-btn btn-delete" onclick="deleteElement(this)">×</button>
-                  </div>
-                  <div class="card-header-title" id="previewBackTitle">Event Program & Reception</div>
-                  <div class="card-subtitle" id="previewBackSubtitle">Reception follows immediately at Grand Ballroom. Attire: Pastel Formal.</div>
-                </div>
-
-                <div class="draggable" style="top: 120px; left: 15px; width: 90%;">
-                  <div class="draggable-controls">
-                    <button type="button" class="control-btn btn-rotate" onclick="rotateElement(this)">↻</button>
-                    <button type="button" class="control-btn btn-delete" onclick="deleteElement(this)">×</button>
-                  </div>
-                  <!-- Godparents List -->
-                  <div class="card-godparents-box">
+                <div class="card-godparents-box">
+                  <div class="card-godparents-header">
                     <div class="card-godparents-title" id="previewGodparentHeading">Mga Ninong at Ninang</div>
-                    <div class="godparents-list-preview" id="previewGodparentsList">
-                      <!-- Dynamically synced Final List Godparents with auto-scaling font size -->
-                    </div>
+                    <div class="card-godparents-sub" id="previewGodparentSubheading">Guiding Lights & Christian Guardians</div>
+                  </div>
+                  
+                  <!-- Responsive Final Godparents Grid -->
+                  <div class="godparents-list-preview" id="previewGodparentsList">
+                    <!-- Dynamically rendered Final Godparents -->
                   </div>
                 </div>
 
@@ -1282,13 +1316,15 @@
   <script>
     let activeElement = null;
     let initialX, initialY;
-    const SNAP_THRESHOLD = 8; // Snap distance tolerance in pixels
+    const SNAP_THRESHOLD = 8;
 
     document.addEventListener('DOMContentLoaded', () => {
       setupEventListeners();
       renderGodparentsOnCard();
       updateCardDimensions();
       setupDraggableHandlers();
+      initializeResizeHandles();
+      selectElementForEditing(document.querySelector('.draggable'));
     });
 
     /* Universal Free Drag & Drop Event Listeners with Alignment Guidelines & Magnetic Snap */
@@ -1296,23 +1332,93 @@
       document.addEventListener('mousedown', dragStart);
       document.addEventListener('mouseup', dragEnd);
       document.addEventListener('mousemove', drag);
-      document.addEventListener('click', function(e) {
-        const target = e.target.closest('.draggable');
-        if (target && !e.target.classList.contains('control-btn')) selectElementForEditing(target);
-      });
+      document.addEventListener('mousedown', resizeStart);
+      document.addEventListener('mousemove', resizeMove);
+      document.addEventListener('mouseup', resizeEnd);
 
       document.addEventListener('touchstart', dragStart, { passive: false });
+      document.addEventListener('touchstart', resizeStart, { passive: false });
+      document.addEventListener('touchmove', resizeMove, { passive: false });
+      document.addEventListener('touchend', resizeEnd);
       document.addEventListener('touchend', dragEnd);
       document.addEventListener('touchmove', drag, { passive: false });
     }
 
+    let resizeState = null;
+
+    function initializeResizeHandles() {
+      document.querySelectorAll('.draggable').forEach(wrapper => {
+        ['nw','ne','sw','se'].forEach(pos => {
+          if (!wrapper.querySelector(`.resize-handle.${pos}`)) {
+            const handle = document.createElement('div');
+            handle.className = `resize-handle ${pos}`;
+            handle.dataset.resize = pos;
+            wrapper.appendChild(handle);
+          }
+        });
+      });
+    }
+
+    function selectElementForEditing(el) {
+      if (!el) return;
+      document.querySelectorAll('.draggable.selected-for-resize').forEach(x => x.classList.remove('selected-for-resize'));
+      initializeResizeHandles();
+      el.classList.add('selected-for-resize');
+      window.selectedResizeElement = el;
+    }
+
+    function resizeStart(e) {
+      const handle = e.target.closest('.resize-handle');
+      if (!handle) return;
+      const wrapper = handle.closest('.draggable');
+      if (!wrapper) return;
+      e.preventDefault(); e.stopPropagation();
+      selectElementForEditing(wrapper);
+      const point = e.type.includes('touch') ? e.touches[0] : e;
+      const rect = wrapper.getBoundingClientRect();
+      const parent = wrapper.offsetParent;
+      const parentRect = parent.getBoundingClientRect();
+      const rotation = wrapper.dataset.rotation || 0;
+      wrapper.style.transform = `rotate(${rotation}deg)`;
+      wrapper.style.left = `${rect.left - parentRect.left}px`;
+      wrapper.style.top = `${rect.top - parentRect.top}px`;
+      wrapper.style.bottom = 'auto';
+      resizeState = { wrapper, handle: handle.dataset.resize, startX: point.clientX, startY: point.clientY, startW: rect.width, startH: rect.height, startLeft: rect.left - parentRect.left, startTop: rect.top - parentRect.top };
+    }
+
+    function resizeMove(e) {
+      if (!resizeState) return;
+      e.preventDefault();
+      const point = e.type.includes('touch') ? e.touches[0] : e;
+      const r = resizeState;
+      let w = r.startW, h = r.startH, left = r.startLeft, top = r.startTop;
+      const dx = point.clientX - r.startX, dy = point.clientY - r.startY;
+      if (r.handle.includes('e')) w = r.startW + dx;
+      if (r.handle.includes('s')) h = r.startH + dy;
+      if (r.handle.includes('w')) { w = r.startW - dx; left = r.startLeft + dx; }
+      if (r.handle.includes('n')) { h = r.startH - dy; top = r.startTop + dy; }
+      const parent = r.wrapper.offsetParent;
+      w = Math.max(35, Math.min(w, parent.clientWidth));
+      h = Math.max(25, Math.min(h, parent.clientHeight));
+      left = Math.max(0, Math.min(left, parent.clientWidth - w));
+      top = Math.max(0, Math.min(top, parent.clientHeight - h));
+      r.wrapper.style.width = `${w}px`;
+      r.wrapper.style.height = `${h}px`;
+      r.wrapper.style.left = `${left}px`;
+      r.wrapper.style.top = `${top}px`;
+      r.wrapper.style.bottom = 'auto';
+      if (r.wrapper.querySelector('#previewGodparentsList') || r.wrapper.querySelector('.card-godparents-box')) renderGodparentsOnCard();
+    }
+
+    function resizeEnd() { resizeState = null; }
+
     function dragStart(e) {
       const target = e.target.closest('.draggable');
-      if (!target || e.target.classList.contains('control-btn')) return;
+      if (!target || e.target.classList.contains('control-btn') || e.target.classList.contains('resize-handle')) return;
 
+      selectElementForEditing(target);
       activeElement = target;
       activeElement.classList.add('active');
-      selectElementForEditing(activeElement);
 
       const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
       const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
@@ -1347,14 +1453,12 @@
       const containerRect = cardOverlay.getBoundingClientRect();
       const elemRect = activeElement.getBoundingClientRect();
 
-      // Horizontal Center Snap Alignment
       const elemCenterX = elemRect.left + elemRect.width / 2;
       const containerCenterX = containerRect.left + containerRect.width / 2;
       if (Math.abs(elemCenterX - containerCenterX) < SNAP_THRESHOLD) {
         currentX += (containerCenterX - elemCenterX);
       }
 
-      // Vertical Center Snap Alignment
       const elemCenterY = elemRect.top + elemRect.height / 2;
       const containerCenterY = containerRect.top + containerRect.height / 2;
       if (Math.abs(elemCenterY - containerCenterY) < SNAP_THRESHOLD) {
@@ -1374,85 +1478,36 @@
       document.getElementById('guideH').style.display = 'none';
     }
 
-    function selectElementForEditing(element) {
-      document.querySelectorAll('.draggable.selected-for-edit').forEach(el => el.classList.remove('selected-for-edit'));
-      if (!element) return;
-      element.classList.add('selected-for-edit');
-      window.selectedElement = element;
-      const rect = element.getBoundingClientRect();
-      const widthInput = document.getElementById('elementWidthInput');
-      const heightInput = document.getElementById('elementHeightInput');
-      const fontInput = document.getElementById('elementFontSizeInput');
-      const spacingInput = document.getElementById('elementLetterSpacingInput');
-      [widthInput,heightInput,fontInput,spacingInput].forEach(i => i.disabled = false);
-      widthInput.value = Math.round(rect.width);
-      heightInput.value = Math.round(rect.height);
-      const textTarget = element.querySelector(':scope > div:not(.draggable-controls), :scope > p, :scope > span');
-      const computed = textTarget ? getComputedStyle(textTarget) : null;
-      fontInput.value = computed ? Math.round(parseFloat(computed.fontSize)) : '';
-      spacingInput.value = computed ? parseFloat(computed.letterSpacing) || 0 : '';
-      document.getElementById('selectedElementHint').textContent = 'Editing the selected content. Resize it freely or use alignment controls.';
-    }
-
-    function getSelectedTextTarget() {
-      const el = window.selectedElement;
-      if (!el) return null;
-      return el.querySelector(':scope > div:not(.draggable-controls), :scope > p, :scope > span') || el.querySelector('div:not(.draggable-controls), p, span');
-    }
-
-    function resizeSelectedElement() {
-      const el = window.selectedElement;
-      if (!el) return;
-      const w = parseFloat(document.getElementById('elementWidthInput').value);
-      const h = parseFloat(document.getElementById('elementHeightInput').value);
-      if (Number.isFinite(w) && w > 0) el.style.width = w + 'px';
-      if (Number.isFinite(h) && h > 0) el.style.height = h + 'px';
-    }
-
-    function resizeSelectedText() {
-      const target = getSelectedTextTarget();
-      const size = parseFloat(document.getElementById('elementFontSizeInput').value);
-      if (target && Number.isFinite(size) && size > 0) target.style.fontSize = size + 'px';
-    }
-
-    function updateSelectedTextStyle() {
-      const target = getSelectedTextTarget();
-      const spacing = parseFloat(document.getElementById('elementLetterSpacingInput').value);
-      if (target && Number.isFinite(spacing)) target.style.letterSpacing = spacing + 'px';
-    }
-
     function alignSelectedElement(mode) {
-      const el = window.selectedElement;
-      if (!el) { alert('Please select a content block first.'); return; }
-      const parent = el.parentElement;
-      const maxX = Math.max(0, parent.clientWidth - el.offsetWidth);
-      const maxY = Math.max(0, parent.clientHeight - el.offsetHeight);
+      const el = window.selectedResizeElement;
+      if (!el) return;
+      const parent = el.offsetParent;
+      if (!parent) return;
+      const maxW = parent.clientWidth, maxH = parent.clientHeight;
+      const w = el.offsetWidth, h = el.offsetHeight;
       if (mode === 'left') el.style.left = '0px';
-      if (mode === 'centerX' || mode === 'center') el.style.left = (maxX / 2) + 'px';
-      if (mode === 'right') el.style.left = maxX + 'px';
+      if (mode === 'centerX' || mode === 'center') el.style.left = `${Math.max(0,(maxW-w)/2)}px`;
+      if (mode === 'right') el.style.left = `${Math.max(0,maxW-w)}px`;
       if (mode === 'top') el.style.top = '0px';
-      if (mode === 'centerY' || mode === 'center') el.style.top = (maxY / 2) + 'px';
-      if (mode === 'bottom') el.style.top = maxY + 'px';
+      if (mode === 'centerY' || mode === 'center') el.style.top = `${Math.max(0,(maxH-h)/2)}px`;
+      if (mode === 'bottom') el.style.top = `${Math.max(0,maxH-h)}px`;
+      el.style.bottom = 'auto';
     }
 
     function autoAlignAllElements() {
-      const page = window.activeCardPage === 'front' ? document.getElementById('frontCardContent') : document.getElementById('backCardContent');
-      const elements = Array.from(page.querySelectorAll(':scope > .draggable'));
-      if (!elements.length) return;
-      const usableWidth = page.clientWidth;
-      const usableHeight = page.clientHeight;
-      const gap = Math.max(8, Math.round(usableHeight * 0.02));
-      let totalHeight = elements.reduce((sum, el) => sum + el.offsetHeight, 0) + gap * (elements.length - 1);
-      let y = Math.max(0, (usableHeight - totalHeight) / 2);
-      elements.forEach(el => {
-        el.style.left = Math.max(0, (usableWidth - el.offsetWidth) / 2) + 'px';
-        el.style.top = y + 'px';
+      const parent = window.activeCardPage === 'back' ? document.getElementById('backCardContent') : document.getElementById('frontCardContent');
+      if (!parent) return;
+      const els = [...parent.querySelectorAll(':scope > .draggable')];
+      els.forEach(el => {
+        el.style.left = `${Math.max(0,(parent.clientWidth-el.offsetWidth)/2)}px`;
         el.style.bottom = 'auto';
-        el.style.transform = 'none';
-        el.dataset.rotation = 0;
-        y += el.offsetHeight + gap;
       });
-      selectElementForEditing(window.selectedElement || elements[0]);
+      if (!els.length) return;
+      const gap = 8;
+      const total = els.reduce((sum,el)=>sum+el.offsetHeight,0) + gap*(els.length-1);
+      let y = Math.max(0,(parent.clientHeight-total)/2);
+      els.forEach(el => { el.style.top = `${y}px`; y += el.offsetHeight + gap; });
+      selectElementForEditing(els[0]);
     }
 
     function rotateElement(btn) {
@@ -1490,6 +1545,7 @@
 
       wrapper.appendChild(p);
       parent.appendChild(wrapper);
+      initializeResizeHandles();
       selectElementForEditing(wrapper);
     }
 
@@ -1509,6 +1565,7 @@
 
         wrapper.appendChild(img);
         parent.appendChild(wrapper);
+        initializeResizeHandles();
         selectElementForEditing(wrapper);
       };
       reader.readAsDataURL(file);
@@ -1536,6 +1593,13 @@
       controls.appendChild(rotateBtn);
       controls.appendChild(deleteBtn);
       wrapper.appendChild(controls);
+
+      ['nw','ne','sw','se'].forEach(pos => {
+        const handle = document.createElement('div');
+        handle.className = `resize-handle ${pos}`;
+        handle.dataset.resize = pos;
+        wrapper.appendChild(handle);
+      });
 
       return wrapper;
     }
@@ -1637,6 +1701,39 @@
       studioCard.style.display = studioCard.style.display === 'none' ? 'block' : 'none';
     }
 
+    function swapDimensions() {
+      const widthEl = document.getElementById('cardWidthCm');
+      const heightEl = document.getElementById('cardHeightCm');
+      const temp = widthEl.value;
+      widthEl.value = heightEl.value;
+      heightEl.value = temp;
+
+      const orientationSelect = document.getElementById('cardOrientation');
+      if (parseFloat(widthEl.value) > parseFloat(heightEl.value)) {
+        orientationSelect.value = 'landscape';
+      } else {
+        orientationSelect.value = 'portrait';
+      }
+
+      updateCardDimensions();
+    }
+
+    function changeOrientation(orient) {
+      const widthEl = document.getElementById('cardWidthCm');
+      const heightEl = document.getElementById('cardHeightCm');
+      let w = parseFloat(widthEl.value) || 12.7;
+      let h = parseFloat(heightEl.value) || 17.8;
+
+      if (orient === 'landscape' && w < h) {
+        widthEl.value = h;
+        heightEl.value = w;
+      } else if (orient === 'portrait' && w > h) {
+        widthEl.value = h;
+        heightEl.value = w;
+      }
+      updateCardDimensions();
+    }
+
     function updateCardDimensions() {
       const widthCm = parseFloat(document.getElementById('cardWidthCm').value) || 12.7;
       const heightCm = parseFloat(document.getElementById('cardHeightCm').value) || 17.8;
@@ -1645,7 +1742,7 @@
       let computedWidth = widthCm * pxPerCm;
       let computedHeight = heightCm * pxPerCm;
 
-      const maxWidth = 380;
+      const maxWidth = 520;
       if (computedWidth > maxWidth) {
         const scale = maxWidth / computedWidth;
         computedWidth = maxWidth;
@@ -1656,14 +1753,31 @@
       cardPreview.style.width = `${computedWidth}px`;
       cardPreview.style.height = `${computedHeight}px`;
 
-      const dimLabel = `Visualizer Size: ${widthCm} cm × ${heightCm} cm`;
+      const orientationSelect = document.getElementById('cardOrientation');
+      if (widthCm > heightCm) {
+        orientationSelect.value = 'landscape';
+      } else if (heightCm > widthCm) {
+        orientationSelect.value = 'portrait';
+      }
+
+      const currentOrient = orientationSelect.value.charAt(0).toUpperCase() + orientationSelect.value.slice(1);
+      const dimLabel = `Visualizer Size: ${widthCm} cm × ${heightCm} cm (${currentOrient})`;
       document.getElementById('liveDimensionLabel').textContent = dimLabel;
-      document.getElementById('modalDimensionDisplay').textContent = `${widthCm} cm × ${heightCm} cm`;
+      document.getElementById('modalDimensionDisplay').textContent = `${widthCm} cm × ${heightCm} cm (${currentOrient})`;
+
+      // Re-trigger layout fit for godparents on dimension resize
+      renderGodparentsOnCard();
     }
 
     function setCustomCm(w, h) {
-      document.getElementById('cardWidthCm').value = w;
-      document.getElementById('cardHeightCm').value = h;
+      const orientationSelect = document.getElementById('cardOrientation').value;
+      if (orientationSelect === 'landscape') {
+        document.getElementById('cardWidthCm').value = Math.max(w, h);
+        document.getElementById('cardHeightCm').value = Math.min(w, h);
+      } else {
+        document.getElementById('cardWidthCm').value = Math.min(w, h);
+        document.getElementById('cardHeightCm').value = Math.max(w, h);
+      }
       updateCardDimensions();
     }
 
@@ -1694,13 +1808,15 @@
         editorBack.style.display = 'block';
         frontContent.style.display = 'none';
         backContent.style.display = 'block';
-        indicator.textContent = 'PREVIEWING: PAGE 2 (BACK DETAILS & GODPARENTS)';
+        indicator.textContent = 'PREVIEWING: PAGE 2 (FINAL GODPARENTS LIST)';
         cardPreview.style.backgroundImage = window.backBgImage ? `url('${window.backBgImage}')` : 'none';
 
         if (!window.isDoubleSided) {
           document.getElementById('enableDoubleSidedToggle').checked = true;
           toggleDoubleSidedMode(true);
         }
+        
+        renderGodparentsOnCard();
       }
     }
 
@@ -1764,51 +1880,67 @@
       document.getElementById('previewChild').textContent = document.getElementById('cardChildInput').value;
       document.getElementById('previewDetails').innerHTML = document.getElementById('cardDetailsInput').value.replace(/\n/g, '<br>');
 
-      document.getElementById('previewBackTitle').textContent = document.getElementById('cardBackTitleInput').value;
-      document.getElementById('previewBackSubtitle').textContent = document.getElementById('cardBackSubtitleInput').value;
       document.getElementById('previewGodparentHeading').textContent = document.getElementById('cardGodparentHeadingInput').value;
+      document.getElementById('previewGodparentSubheading').textContent = document.getElementById('cardGodparentSubheadingInput').value;
     }
 
-    /* AUTOMATIC INTEGRATION & FONT AUTO-SCALING FOR FINAL GODPARENTS LIST */
+    /* DEDICATED PAGE 2: Renders only the Final Godparents list cleanly and readably */
     function renderGodparentsOnCard() {
       const container = document.getElementById('previewGodparentsList');
       if (!container) return;
       container.innerHTML = '';
-      
-      // Filter ONLY Godparents marked as on the Final List
-      const finalGodparents = (window.guests || []).filter(g => g.category === 'godparent' && g.onFinalList);
-      
-      if (finalGodparents.length === 0) {
-        container.innerHTML = '<span class="godparent-tag" style="opacity: 0.6; font-style: italic;">No Godparents added to Final List yet</span>';
+
+      // Filter exclusively for Final Godparents
+      const finalGodparents = (window.guests || [])
+        .filter(g => g.category === 'godparent' && g.onFinalList);
+
+      if (!finalGodparents.length) {
+        container.style.display = 'flex';
+        container.style.alignItems = 'center';
+        container.style.justifyContent = 'center';
+        container.innerHTML = '<span style="font-size: 0.8rem; opacity: 0.7; font-style: italic; text-align: center;">No Godparents added to Final List yet.<br>Check "Add to Final List" on a godparent to feature them here.</span>';
         return;
       }
 
-      // Automatically determine starting font size based on number of final godparents
-      let baseFontSize = 0.72; // rem
-      if (finalGodparents.length > 15) baseFontSize = 0.62;
-      if (finalGodparents.length > 30) baseFontSize = 0.52;
-      if (finalGodparents.length > 50) baseFontSize = 0.44;
-      if (finalGodparents.length > 80) baseFontSize = 0.36;
+      container.style.display = 'grid';
 
-      finalGodparents.forEach(g => {
-        const span = document.createElement('span');
-        span.className = 'godparent-tag';
-        span.textContent = g.name;
-        span.style.fontSize = `${baseFontSize}rem`;
-        span.style.padding = `${Math.max(0.1, baseFontSize * 0.3)}rem ${Math.max(0.3, baseFontSize * 0.7)}rem`;
-        container.appendChild(span);
+      // Dynamic Grid Columns Configuration based on count
+      const count = finalGodparents.length;
+      let columns = 2;
+      if (count > 16 && count <= 36) {
+        columns = 3;
+      } else if (count > 36) {
+        columns = 4;
+      }
+      container.style.gridTemplateColumns = `repeat(${columns}, minmax(0, 1fr))`;
+
+      finalGodparents.forEach((g, index) => {
+        const item = document.createElement('div');
+        item.className = 'godparent-tag';
+        item.textContent = `${index + 1}. ${g.name || ''}`;
+        item.title = g.name || '';
+        container.appendChild(item);
       });
 
-      // Iterative auto-adjustment to ensure all names fit without overflowing container height
-      let currentSize = baseFontSize;
-      while (container.scrollHeight > container.clientHeight && currentSize > 0.3) {
-        currentSize -= 0.02;
-        const tags = container.querySelectorAll('.godparent-tag');
-        tags.forEach(tag => {
-          tag.style.fontSize = `${currentSize}rem`;
-          tag.style.padding = `${Math.max(0.08, currentSize * 0.3)}rem ${Math.max(0.25, currentSize * 0.7)}rem`;
+      // Auto-scaling font algorithm to guarantee readable fit without overflow
+      const tags = [...container.querySelectorAll('.godparent-tag')];
+      let fontSize = count <= 10 ? 11 : count <= 20 ? 9.5 : count <= 35 ? 8.2 : 7;
+
+      const applyFontSize = (px) => {
+        tags.forEach(t => {
+          t.style.fontSize = `${px.toFixed(2)}px`;
+          t.style.padding = px < 8 ? '0.08rem 0.2rem' : '0.15rem 0.35rem';
         });
-        if (currentSize <= 0.3) break;
+      };
+
+      applyFontSize(fontSize);
+
+      // Fine-tune fit step-by-step if bounding box overflows
+      let attempts = 0;
+      while (container.scrollHeight > container.clientHeight && fontSize > 4.5 && attempts < 50) {
+        fontSize -= 0.2;
+        applyFontSize(fontSize);
+        attempts++;
       }
     }
 
